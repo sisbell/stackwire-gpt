@@ -3,8 +3,6 @@
 .idea/
 pubspec.lock
 *.iml
-*.json
 output/
 data/
 build/
-api_key.txt
