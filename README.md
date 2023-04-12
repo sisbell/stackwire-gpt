@@ -1,7 +1,7 @@
 # Stackwire Runner for OpenAI
 A command line app for experimenting with OpenAI API prompts
-
 > Currently only chat completion API is supported.
+
 ## Setup Experiment
 An experiment will require three files
 * experiment file - this contains all the configuration info needed to make the call to OpenAI
@@ -54,8 +54,20 @@ Finally, add a file that contains your your API Key (the one below is not real).
 sk-gKtTxOumv4orO6cfWlh0ZK
 ```
 
+## Download Program
+You can build this project yourself. Or download the stackwire executable for your platform from
+Artifacts. They are under the Actions tab. Unzip after downloading.
+
+https://docs.github.com/en/actions/managing-workflow-runs/downloading-workflow-artifacts
+
+For macos and linux you will need to make the file executable
+```agsl
+chmod a+x stackwire
+```
+For mac, you will need to do something like the following before running from command-line.
+https://thewiredshopper.com/apple-cannot-check-for-malicious-software-error/
+
 ## Run Experiment
-Download the stackwire executable for your platform from page <<>>
 
 Run the following command.
 ```
