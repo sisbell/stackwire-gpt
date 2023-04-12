@@ -75,6 +75,57 @@ stackwire experiments.json
 ```
 The above command will generate the output directory with a record of all of the requests and responses from OpenAI.
 
+## Output
+For each run you will get a record of the request sent:
+
+```
+{
+  "model": "gpt-3.5-turbo",
+  "temperature": 1.2,
+  "top_p": 1,
+  "max_tokens": 500,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Write me a story about Commander in Starfleet. One Sentence Only."
+    }
+  ]
+}
+```
+
+And the response from OpenAI. This will allow you to also determine tokens used.
+```
+{
+  "id": "chatcmpl-74WgfENKxOmQwRwtpoJ6IFELyzNTL",
+  "object": "chat.completion",
+  "created": 1681313317,
+  "model": "gpt-3.5-turbo-0301",
+  "usage": {
+    "prompt_tokens": 22,
+    "completion_tokens": 27,
+    "total_tokens": 49
+  },
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "As Commander of the USS Enterprise, Jean-Luc Picard boldly leads his crew through perilous missions and treks through the galaxy."
+      },
+      "finish_reason": "stop",
+      "index": 0
+    }
+  ]
+}
+```
+You will also get a text-only output of the run
+
+```
+exp4
+Write me a story about Commander in Starfleet. One Sentence Only.
+As Commander of the USS Enterprise, Jean-Luc Picard boldly leads his crew through perilous missions and treks through the galaxy.
+
+```
+
 ## Building this project
 Make sure that you have dart installed. And then From the project root
 > dart pub get
