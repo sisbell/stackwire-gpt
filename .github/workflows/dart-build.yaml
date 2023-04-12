@@ -1,0 +1,37 @@
+name: Dart Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Build
+        run: dart compile exe bin/stackwire.dart -o stackwire
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: stackwire-${{ matrix.os }}
+          path: stackwire
