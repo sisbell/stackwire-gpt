@@ -8,15 +8,15 @@ An experiment will require three files
 * prompt file - this is the file that you want to include as the prompt to OpenAI
 * API key file - contains your OpenAI API Key
 
-First create your experiment file. You can name it anything, by default the program will look for 'experiment.json'
+First create your experiment file. You can name it anything, by default the program will look for 'experiment.json'. The following is for running a prompt multiple times.
  ```
  {
-  "experiment_name" : "my_exp",
+  "experiment_name" : "multirun-exp",
   "number_of_runs" : 2,
-
+  "response_format" : "text",
   "output_dir" : "output",
   "api_key_file": "api_key.txt",
-  "prompt_template" : "data/prompt.template",
+  "prompt_template" : "prompt.txt",
   "ai_config" : {
     "model": "gpt-3.5-turbo",
     "temperature": 1.2,
@@ -24,11 +24,32 @@ First create your experiment file. You can name it anything, by default the prog
     "max_tokens": 500
   },
   "template_values" : {
-    "COMMANDER_NAME" : "Commander in Starfleet",
-    "COMMANDER_DESCRIPTION" : "My Example Description"
+    "rank" : "Commander in Starfleet",
+    "show" : "The Original Star Trek"
   }
 }
  ```
+You can also chain prompts by setting the response_format to "json" and setting a run_depth > 0. The prompt will need to return in JSON and the json fields will be used to fill-in the values for the next prompt sent to OpenAI. You can look in the "example" directory to see how this is done.
+```
+{
+  "experiment_name" : "chain-exp",
+  "number_of_runs" : 1,
+  "response_format" : "json",
+  "run_depth" : 2,
+  "output_dir" : "output",
+  "api_key_file": "api_key.txt",
+  "prompt_template" : "prompt-json.txt",
+  "ai_config" : {
+    "model": "gpt-3.5-turbo",
+    "temperature": 1.2,
+    "top_p": 1,
+    "max_tokens": 500
+  },
+  "template_values" : {
+    "rank" : "Commander in Starfleet"
+  }
+}
+```
 | Field           | Description                                                                                             |
 |-----------------|---------------------------------------------------------------------------------------------------------|
 | experiment_name | The name of your experiment. Don't use spaces or illegal characters.                                    |
@@ -37,19 +58,40 @@ First create your experiment file. You can name it anything, by default the prog
 | api_key_file           | the path of your api key file                                                                           |
 | prompt_template           | the path of your prompt template                                                                        |
 | template_values           | any values you want to fill-in to the prompt template. This field must exist but may have no values.    |
+| response_format           | either json or text. The default value is text if not specified                                         |
+| run_depth           | the depth of a prompt chain. Default value is 0                                                         |
 | ai_config           | the configuration parameters that are sent to OpenAI. You may add any legal parameters that OpenAI uses |
 
 Next create your prompt file: You can name it anything, in our case it is **data/prompt.template**. An example is given below. The template value from the experiment file will replace the special syntax {{COMMANDER_NAME}}
 ```
-Write me a story about {{COMMANDER_NAME}}. One Sentence Only.
+Write me a story about ${rank}. One Sentence Only.
 ```
 The prompt sent to OpenAI will be
 
 ````
 Write me a story about Commander in Starfleet. One Sentence Only.
 ````
-
-Finally, add a file that contains your your API Key (the one below is not real). In our example. we call it **api_key.txt**
+If you are doing prompt chaining, consider the following example
+```
+Write me a story about ${rank}. The main character is ${mainCharacterName}. If no main character is given, choose one. Write one sentence only.
+The response should be in JSON using the following structure. Only use these fields. {"mainCharacterName": "${mainCharacterName}"}
+```
+On the first request, the prompt sent to OpenAI will be
+```
+Write me a story about Commander in Starfleet. The main character is . If no main character is given, choose one. Write one sentence only.
+The response should be in JSON using the following structure. Only use these fields. {"mainCharacterName": ""}
+```
+The content of the response:
+```
+{"mainCharacterName": "Captain Kirk"}
+```
+The second request:
+```
+Write me a story about Commander in Starfleet. The main character is Captain Kirk. If no main character is given, choose one. Write one sentence only.
+The response should be in JSON using the following structure. Only use these fields. {"mainCharacterName": "Captain Kirk"}
+```
+## Adding API Key
+Add a file that contains your API Key (the one below is not real). In our example. we call it **api_key.txt**
 ```
 sk-gKtTxOumv4orO6cfWlh0ZK
 ```
