@@ -26,7 +26,7 @@ Future<String> readFileAsString(String filePath) async {
   }
 }
 
-Future<void> writeString(String content, String filePath, ) async {
+Future<void> writeString(String content, String filePath) async {
   File file = File(filePath);
   try {
     await file.writeAsString(content);

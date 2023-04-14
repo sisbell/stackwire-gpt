@@ -1,10 +1,11 @@
 {
   "experiment_name" : "exp1",
   "number_of_runs" : 1,
-  "response_format" : "text",
+  "response_format" : "json",
+  "run_depth" : 2,
   "output_dir" : "output",
   "api_key_file": "api_key.txt",
-  "prompt_template" : "prompt.txt",
+  "prompt_template" : "prompt-json.txt",
   "ai_config" : {
     "model": "gpt-3.5-turbo",
     "temperature": 1.2,
@@ -12,7 +13,6 @@
     "max_tokens": 500
   },
   "template_values" : {
-    "rank" : "Commander in Starfleet",
-    "show" : "The Original Star Trek"
+    "rank" : "Commander in Starfleet"
   }
 }
