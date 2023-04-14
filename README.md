@@ -62,7 +62,7 @@ You can also chain prompts by setting the response_format to "json" and setting 
 | run_depth           | the depth of a prompt chain. Default value is 0                                                         |
 | ai_config           | the configuration parameters that are sent to OpenAI. You may add any legal parameters that OpenAI uses |
 
-Next create your prompt file: You can name it anything, in our case it is **data/prompt.template**. An example is given below. The template value from the experiment file will replace the special syntax {{COMMANDER_NAME}}
+Next create your prompt file: You can name it anything, in our case it is **data/prompt.txt**. An example is given below. The template value from the experiment file will replace the special syntax ${rank}
 ```
 Write me a story about ${rank}. One Sentence Only.
 ```
@@ -162,7 +162,7 @@ And the response from OpenAI. This will allow you to also determine tokens used.
 You will also get a text-only output of the run
 
 ```
-exp4
+exp-multirun
 Write me a story about Commander in Starfleet. One Sentence Only.
 As Commander of the USS Enterprise, Jean-Luc Picard boldly leads his crew through perilous missions and treks through the galaxy.
 
