@@ -26,10 +26,24 @@ Future<String> readFileAsString(String filePath) async {
   }
 }
 
-Future<void> writeString(String content, String filePath) async {
-  File file = File(filePath);
+Future<void> writeMetrics(String content, String filePath) async {
+  final file = File(filePath);
+  bool exists = await file.exists();
+  if(!exists) {
+    await file.writeAsString("request_id, request_time, prompt_tokens, completion_tokens, total_tokens\n");
+  }
+  final sink = File(filePath).openWrite(mode: FileMode.append);
   try {
-    await file.writeAsString(content);
+    sink.write(content);
+  } catch (e) {
+    throw Exception('Error occurred while writing file: $e');
+  }
+}
+
+Future<void> writeString(String content, String filePath) async {
+  final file = File(filePath);
+  try {
+    file.writeAsString(content);
   } catch (e) {
     throw Exception('Error occurred while writing file: $e');
   }

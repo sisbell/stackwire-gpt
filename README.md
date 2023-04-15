@@ -180,9 +180,15 @@ You will also get a text-only output of the run
 exp-multirun
 Write me a story about Commander in Starfleet. One Sentence Only.
 As Commander of the USS Enterprise, Jean-Luc Picard boldly leads his crew through perilous missions and treks through the galaxy.
-
 ```
-
+The metrics.csv file will give you the performance times and token usage for each experiment
+```
+request_id, request_time, prompt_tokens, completion_tokens, total_tokens
+chatcmpl-75h33IskbXQTX7XtQaD5ULH8sc0ou, 1644, 80, 39, 119
+chatcmpl-75h34lQXpCOXqyyyZP7qG3bP1pa9O, 2079, 79, 59, 138
+chatcmpl-75h3OskaDPB81xa5UzOHL2y6jO4BB, 1888, 80, 43, 123
+chatcmpl-75h3Q2eSBUKOA0DHlKvf6Zlx4B4JQ, 2446, 78, 64, 142
+```
 ## Building this project
 Make sure that you have dart installed. And then from the project root
 > dart pub get

@@ -63,8 +63,8 @@ Future<void> runExperiment(
 Future<Map<String, dynamic>> sendHttpPostRequest(
     experimentName, outputDir, data, apiKey, isJsonFormat) async {
   print("Making call to OpenAi");
-  final stringBuffer = StringBuffer();
-  stringBuffer.writeln("$experimentName");
+  final textResponseBuffer = StringBuffer();
+  textResponseBuffer.writeln("$experimentName");
 
   final headers = {
     "Authorization": "Bearer ${apiKey}",
@@ -73,13 +73,16 @@ Future<Map<String, dynamic>> sendHttpPostRequest(
 
   final body = jsonEncode(data);
   String content = data['messages'][0]['content'];
-  stringBuffer.writeln(content);
+  textResponseBuffer.writeln(content);
+  textResponseBuffer.writeln("------");
   try {
+    final startTime = DateTime.now().millisecondsSinceEpoch;
     final response = await http.post(
       Uri.parse("https://api.openai.com/v1/chat/completions"),
       headers: headers,
       body: body,
     );
+    final endTime = DateTime.now().millisecondsSinceEpoch;
 
     if (response.statusCode == 200) {
       print('Request successful.');
@@ -88,11 +91,20 @@ Future<Map<String, dynamic>> sendHttpPostRequest(
     }
     Map<String, dynamic> jsonBody = jsonDecode(response.body);
     final responseId = jsonBody["id"];
+    final usage = jsonBody["usage"];
+    final promptTokens = usage['prompt_tokens'];
+    final completionTokens = usage['completion_tokens'];
+    final totalTokens = usage['total_tokens'];
+
+    final metricsBuffer = StringBuffer();
+    final requestTime = endTime - startTime;
+    metricsBuffer.writeln("$responseId, $requestTime, $promptTokens, $completionTokens, $totalTokens");
+    writeMetrics(metricsBuffer.toString(), "$outputDir/$experimentName/metrics.csv");
 
     final content = jsonBody["choices"][0]["message"]["content"];
-    stringBuffer.writeln(content);
+    textResponseBuffer.writeln(content);
 
-    writeString(stringBuffer.toString(),
+    writeString(textResponseBuffer.toString(),
         "$outputDir/$experimentName/data/$responseId-text.txt");
     writeString(
         body, "$outputDir/$experimentName/data/$responseId-request.json");
