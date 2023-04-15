@@ -5,10 +5,11 @@ import 'package:http/http.dart' as http;
 
 import 'files.dart';
 
-Future<String> createPrompt(experimentName, String template, templateValues, outputFile) async {
+Future<String> createPrompt(
+    experimentName, String template, templateValues, outputFile) async {
   RegExp placeholderPattern = RegExp(r'\$\{([^\}]+)\}');
-  String modifiedTemplate = template.replaceAllMapped(
-      placeholderPattern, (Match match) => templateValues[match[1]] ?? match[0]);
+  String modifiedTemplate = template.replaceAllMapped(placeholderPattern,
+      (Match match) => templateValues[match[1]] ?? match[0]);
 
   await writeString(modifiedTemplate, outputFile);
 
@@ -16,32 +17,41 @@ Future<String> createPrompt(experimentName, String template, templateValues, out
   return modifiedTemplate;
 }
 
-Future<void> runExperiment(Map<String, dynamic> experimentConfig, aiConfig) async {
+Future<void> runExperiment(
+    Map<String, dynamic> experimentConfig, aiConfig) async {
   final experimentName = experimentConfig["experimentName"];
-  final promptTemplateFilePath = experimentConfig["promptTemplateFilePath"];
-  final templateValues = experimentConfig["templateValues"];
+  final promptTemplate = experimentConfig["promptTemplate"];
+  final promptProperties = experimentConfig["promptProperties"];
   final apiKey = experimentConfig["apiKey"];
   final outputDir = experimentConfig["outputDir"];
   var numberOfRuns = experimentConfig["runs"];
   final runDepth = experimentConfig["runDepth"];
   final promptAiFile = experimentConfig["promptAiFile"];
   final responseFormat = experimentConfig["responseFormat"];
-  String promptTemplate = await readFileAsString(promptTemplateFilePath);
+  final systemMessage = experimentConfig['systemMessage'];
+
   print("$numberOfRuns $runDepth");
-  while(numberOfRuns-- > 0) {
+  while (numberOfRuns-- > 0) {
     print("Run: $numberOfRuns");
     var depth = runDepth;
-    var values  = Map.from(templateValues);
-    while(depth >= 0) {
+    var values = Map.from(promptProperties);
+    while (depth >= 0) {
       print("Depth: $depth");
-      final prompt = await createPrompt(experimentName, promptTemplate, values, promptAiFile);
+      final prompt = await createPrompt(
+          experimentName, promptTemplate, values, promptAiFile);
       List<Map<String, dynamic>> messages = [
         {"role": "user", "content": prompt},
       ];
+      if (systemMessage != null) {
+        messages.add(
+          {"role": "system", "content": systemMessage},
+        );
+      }
       aiConfig['messages'] = messages;
       final isJsonFormat = responseFormat == "json";
-      final params = await sendHttpPostRequest(experimentName, outputDir, aiConfig, apiKey, isJsonFormat);
-      if(isJsonFormat) {
+      final params = await sendHttpPostRequest(
+          experimentName, outputDir, aiConfig, apiKey, isJsonFormat);
+      if (isJsonFormat) {
         values.addAll(params);
       }
       depth--;
@@ -50,7 +60,8 @@ Future<void> runExperiment(Map<String, dynamic> experimentConfig, aiConfig) asyn
   }
 }
 
-Future<Map<String, dynamic>> sendHttpPostRequest(experimentName, outputDir, data, apiKey, isJsonFormat) async {
+Future<Map<String, dynamic>> sendHttpPostRequest(
+    experimentName, outputDir, data, apiKey, isJsonFormat) async {
   print("Making call to OpenAi");
   final stringBuffer = StringBuffer();
   stringBuffer.writeln("$experimentName");
@@ -81,9 +92,12 @@ Future<Map<String, dynamic>> sendHttpPostRequest(experimentName, outputDir, data
     final content = jsonBody["choices"][0]["message"]["content"];
     stringBuffer.writeln(content);
 
-    writeString(stringBuffer.toString(), "$outputDir/$experimentName/data/$responseId-text.txt");
-    writeString(body, "$outputDir/$experimentName/data/$responseId-request.json");
-    writeString(response.body, "$outputDir/$experimentName/data/$responseId-response.json");
+    writeString(stringBuffer.toString(),
+        "$outputDir/$experimentName/data/$responseId-text.txt");
+    writeString(
+        body, "$outputDir/$experimentName/data/$responseId-request.json");
+    writeString(response.body,
+        "$outputDir/$experimentName/data/$responseId-response.json");
     return isJsonFormat ? jsonDecode(content) : {};
   } catch (e) {
     print('Error occurred during the request: $e');

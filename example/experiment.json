@@ -1,18 +1,24 @@
 {
-  "experiment_name" : "exp1",
+  "experiment_name" : "multirun-exp",
   "number_of_runs" : 1,
   "response_format" : "text",
   "output_dir" : "output",
   "api_key_file": "api_key.txt",
-  "prompt_template" : "prompt.txt",
   "ai_config" : {
     "model": "gpt-3.5-turbo",
     "temperature": 1.2,
     "top_p": 1,
     "max_tokens": 500
   },
-  "template_values" : {
-    "rank" : "Commander in Starfleet",
-    "show" : "The Original Star Trek"
+  "chat" : {
+    "run_depth" : 0,
+    "system_message_file" : "system-message.txt",
+  },
+  "prompts" : {
+    "template_file" : "prompt.txt",
+    "properties" : {
+      "rank" : "Commander in Starfleet",
+      "show" : "The Original Star Trek"
+    }
   }
 }
