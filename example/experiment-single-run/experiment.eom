@@ -1,0 +1,23 @@
+{
+  "experiment_name": "singlerun-exp",
+  "number_of_runs": 1,
+  "response_format": "text",
+  "output_dir": "output",
+  "api_key_file": "../../api_key",
+  "ai_config": {
+    "model": "gpt-3.5-turbo",
+    "temperature": 1.2,
+    "top_p": 1,
+    "max_tokens": 500
+  },
+  "prompts": {
+    "system_message_file": "../system-message.txt",
+    "chain": [
+      "simple-story.prompt"
+    ],
+    "properties": {
+      "rank": "Commander in Starfleet",
+      "show": "The Original Star Trek"
+    }
+  }
+}

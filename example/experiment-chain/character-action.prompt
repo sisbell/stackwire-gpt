@@ -1,0 +1,3 @@
+Give me an action for ${mainCharacterName} for the following story:
+${story}
+The response must be in JSON using the following structure. Only use these fields. {"characterAction": ""}
