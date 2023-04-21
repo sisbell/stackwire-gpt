@@ -262,7 +262,7 @@ chatcmpl-774QYzgnx9x3UjxPjd4ef4lotUPI1, structured-story.prompt, 5668, 190, 72, 
 chatcmpl-774QelDpcSp02xIJSH2kpdj1WyNsJ, character-action.prompt, 2057, 111, 23, 134
 ```
 ## Building this project
-Make sure that you have dart installed. And then from the project root
+Make sure that you have dart installed. And then from the cli directory root
 > dart pub get
 > 
 > dart compile exe bin/stackwire.dart -o stackwire

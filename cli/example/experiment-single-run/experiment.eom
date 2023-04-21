@@ -1,5 +1,5 @@
 {
-  "experiment_name": "singlerun-exp-1",
+  "experiment_name": "singlerun-exp",
   "number_of_runs": 1,
   "response_format": "text",
   "output_dir": "output",

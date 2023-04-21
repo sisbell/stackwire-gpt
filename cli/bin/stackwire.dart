@@ -1,5 +1,6 @@
-import 'package:stackwire/experiment_runner.dart';
-import 'package:stackwire/files.dart';
+
+import 'package:eom/experiment_runner.dart';
+import 'package:eom/files.dart';
 
 void main(List<String> arguments) async {
   String experimentFilePath = arguments.isEmpty ? 'experiment.eom' : arguments[0];

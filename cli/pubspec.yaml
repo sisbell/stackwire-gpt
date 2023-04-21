@@ -11,3 +11,5 @@ dev_dependencies:
 dependencies:
   http: ^0.13.5
   universal_io: ^2.2.0
+  eom:
+    path: ../packages/eom
