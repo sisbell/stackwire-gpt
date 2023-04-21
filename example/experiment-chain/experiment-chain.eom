@@ -11,10 +11,12 @@
     "max_tokens": 500
   },
   "prompts" : {
-    "system_message_file" : "../system-message.txt",
     "chain_runs" : 2,
     "chain": [
       "structured-story.prompt",
+      "character-action.prompt"
+    ],
+    "excludesMessageHistory" : [
       "character-action.prompt"
     ],
     "fixJson" : true,

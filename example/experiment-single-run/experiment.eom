@@ -1,5 +1,5 @@
 {
-  "experiment_name": "singlerun-exp",
+  "experiment_name": "singlerun-exp-1",
   "number_of_runs": 1,
   "response_format": "text",
   "output_dir": "output",
@@ -12,6 +12,7 @@
   },
   "prompts": {
     "system_message_file": "../system-message.txt",
+    "chain_runs" : 1,
     "chain": [
       "simple-story.prompt"
     ],

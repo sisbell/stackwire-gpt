@@ -11,8 +11,7 @@ If no main character name is given, choose one based on role
 CHARACTER ACTION
 ${characterAction}
 
-
-Write me a story based on the character role. If character name, action and the previous scene are given also use those. Write two sentences only.
+Write me a story based on the character role. If character name, action and the previous scene are given also use those. Be very descriptive. Write two sentences only.
 
 RESPONSE
 The response must only be in JSON using the following structure. Only use these fields. {"mainCharacterName": "", "story": ""}

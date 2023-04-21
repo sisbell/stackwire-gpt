@@ -28,14 +28,14 @@ void main(List<String> arguments) async {
     "promptTemplates": promptTemplates,
     "promptChains" :prompts['chain'],
     "promptProperties":  prompts['properties'] ?? {},
+    "excludesMessageHistory" : prompts["excludesMessageHistory"] ?? [],
     "apiKey" : apiKey,
     "outputDir": outputDirName,
     "experimentRuns" : experiment["experiment_runs"] ?? 1,
     "chainRuns" : chainRuns,
-    "promptAiFile": "$outputDirName/$experimentName/prompt-calculated.ai",
     "responseFormat" : experiment['response_format'] ?? "text",
     "systemMessage" : systemMessage,
-    "fixJson" : experiment["fixJson"] ?? false
+    "fixJson" : prompts["fixJson"] ?? false
   };
   runExperiment(experimentConfig, aiConfig);
 }
