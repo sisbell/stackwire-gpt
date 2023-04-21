@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
+
+import 'package:universal_io/io.dart';
 
 Future<void> writeMap(Map<String, dynamic> data, String filePath) async {
   File file = File(filePath);
