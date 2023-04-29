@@ -25,10 +25,17 @@ void addPromptValues(content, responseFormat, promptValues, fixJson) {
   }
 }
 
-Future<String> createPrompt(String template, templateProperties) async {
-  RegExp placeholderPattern = RegExp(r'\$\{([^\}]+)\}');
+RegExp placeholderPattern = RegExp(r'\$\{([^\}]+)\}');
+
+String createPrompt(String template, templateProperties)  {
   String modifiedTemplate = template.replaceAllMapped(placeholderPattern,
           (Match match) => templateProperties[match[1]] ?? match[0]);
+  return modifiedTemplate;
+}
+
+String createPromptByIndex(String template, templateProperties, index)  {
+  String modifiedTemplate = template.replaceAllMapped(placeholderPattern,
+          (Match match) => templateProperties[match[1]][index] ?? match[0]);
   return modifiedTemplate;
 }
 

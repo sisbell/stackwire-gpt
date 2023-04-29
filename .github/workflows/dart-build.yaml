@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        working-directory: ./cli
+        working-directory: .
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
@@ -31,10 +31,10 @@ jobs:
         run: dart pub get
 
       - name: Build
-        run: dart compile exe bin/stackwire.dart -o stackwire
+        run: dart compile exe bin/gpt.dart -o gpt
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: stackwire-${{ matrix.os }}
-          path: ./cli/stackwire
+          name: gpt-${{ matrix.os }}
+          path: ./gpt

@@ -4,30 +4,29 @@ import 'chat_client.dart';
 import 'prompts.dart';
 
 Future<void> runExperiment(
-    Map<String, dynamic> experimentConfig, aiConfig, reporter) async {
-  final experimentName = experimentConfig["experimentName"];
-  final outputDir = experimentConfig["outputDir"];
-  List<String> promptTemplates = experimentConfig["promptTemplates"];
-  List<dynamic> promptChains = experimentConfig["promptChains"];
-  final promptProperties = experimentConfig["promptProperties"];
-  List<dynamic> excludesMessageHistory =
-      experimentConfig["excludesMessageHistory"];
-  final apiKey = experimentConfig["apiKey"];
-  var experimentRuns = experimentConfig["experimentRuns"];
-  final chainRuns = experimentConfig["chainRuns"];
-  final responseFormat = experimentConfig["responseFormat"];
-  final systemMessage = experimentConfig['systemMessage'];
-  final reportDir = "$outputDir/$experimentName";
+    Map<String, dynamic> projectConfig, aiConfig, reporter) async {
+  final apiKey = projectConfig["apiKey"];
+  final chainRuns = projectConfig["chainRuns"];
+  final excludesMessageHistory = projectConfig["excludesMessageHistory"];
+  final fixJson = projectConfig["fixJson"];
+  final outputDir = projectConfig["outputDir"];
+  final projectName = projectConfig["projectName"];
+  final projectVersion = projectConfig["projectVersion"];
+  final projectRuns = projectConfig["projectRuns"];
+  final promptChains = projectConfig["promptChains"];
+  final promptProperties = projectConfig["promptProperties"];
+  final promptTemplates = projectConfig["promptTemplates"];
+  final responseFormat = projectConfig["responseFormat"];
+  final systemMessage = projectConfig['systemMessage'];
+
+  final reportDir = "$outputDir/$projectName/$projectVersion";
   final dataDir = "$reportDir/data";
   final metricsFile = "$reportDir/metrics.csv";
-  final fixJson = experimentConfig["fixJson"];
 
-  final experimentResults = ExperimentResults(experimentName);
-  print("$experimentRuns $chainRuns");
-  for (var experimentRun = 1;
-      experimentRun <= experimentRuns;
-      experimentRun++) {
-    print("Experiment Run: $experimentRun");
+  final experimentResults = ExperimentResults(projectName, projectVersion);
+  print("$projectRuns $chainRuns");
+  for (var projectRun = 1; projectRun <= projectRuns; projectRun++) {
+    print("Project Run: $projectRun");
     var promptValues = Map.from(promptProperties);
     final messageHistory = MessageHistory(systemMessage);
     for (var chainRun = 1; chainRun <= chainRuns; chainRun++) {
@@ -35,9 +34,11 @@ Future<void> runExperiment(
       for (int i = 0; i < promptTemplates.length; i++) {
         var promptFileName = promptChains[i];
         var promptTemplate = promptTemplates[i];
-        final prompt = await createPrompt(promptTemplate, promptValues);
+        final prompt = createPrompt(promptTemplate, promptValues);
         if (excludesMessageHistory.contains(promptFileName)) {
-          aiConfig['messages'] = [{"role": "user", "content": prompt}];
+          aiConfig['messages'] = [
+            {"role": "user", "content": prompt}
+          ];
         } else {
           messageHistory.addUserMessage(prompt);
           aiConfig['messages'] = messageHistory.history;
@@ -45,10 +46,11 @@ Future<void> runExperiment(
         final requestBody = jsonEncode(aiConfig);
         final responseBody = await sendHttpPostRequest(requestBody, apiKey);
         if (responseBody['errorCode'] != null) {
-          await reporter.logFailedRequest(requestBody, dataDir, experimentRun);
-          experimentResults.addExperimentResult(experimentRun, "FAILURE",
+          await reporter.logFailedRequest(requestBody, dataDir, projectRun);
+          experimentResults.addExperimentResult(projectRun, "FAILURE",
               "Failed Request: ${responseBody['errorCode']}");
-          await reporter.writeResultsTo(experimentResults.experimentReport, reportDir);
+          await reporter.writeResultsTo(
+              experimentResults.experimentReport, reportDir);
           throw Exception("Failed Request: ${responseBody['errorCode']}");
         }
         experimentResults.addUserHistory(
@@ -68,25 +70,26 @@ Future<void> runExperiment(
           experimentResults.addAssistantHistory(
               content, responseBody, promptFileName, promptValues, chainRun);
           experimentResults.addExperimentResult(
-              experimentRun, "FAILURE", "Failure Parsing JSON Response");
+              projectRun, "FAILURE", "Failure Parsing JSON Response");
           await reporter.logRequestAndResponse(
-              requestBody, responseBody, dataDir, experimentRun);
+              requestBody, responseBody, dataDir, projectRun);
           await reporter.writeMetrics(
               responseBody, promptFileName, metricsFile);
-          await reporter.writeResultsTo(experimentResults.experimentReport, reportDir);
+          await reporter.writeResultsTo(
+              experimentResults.experimentReport, reportDir);
           rethrow;
         }
         experimentResults.addAssistantHistory(
             content, responseBody, promptFileName, promptValues, chainRun);
         await reporter.logRequestAndResponse(
-            requestBody, responseBody, dataDir, experimentRun);
+            requestBody, responseBody, dataDir, projectRun);
         await reporter.writeMetrics(responseBody, promptFileName, metricsFile);
       }
     }
-    experimentResults.addExperimentResult(experimentRun, "OK", null);
+    experimentResults.addExperimentResult(projectRun, "OK", null);
   }
   await reporter.writeResultsTo(experimentResults.experimentReport, reportDir);
-  print("Finished Experiment Run");
+  print("Finished Experiment");
 }
 
 class MessageHistory {
@@ -120,9 +123,10 @@ class ExperimentResults {
 
   List<Map<String, dynamic>> requestHistory = [];
 
-  ExperimentResults(experimentName) {
+  ExperimentResults(projectName, projectVersion) {
     experimentReport = {
-      "experimentName": experimentName,
+      "projectName": projectName,
+      "projectVersion": projectVersion,
       "experimentResults": []
     };
   }
@@ -134,8 +138,8 @@ class ExperimentResults {
   }
 
   void addExperimentResult(experimentRun, result, message) {
-    experimentReport["experimentResults"].add(
-        createExperimentResult(experimentRun, result, message));
+    experimentReport["experimentResults"]
+        .add(createExperimentResult(experimentRun, result, message));
   }
 
   void addUserHistory(prompt, responseBody, promptFileName, promptValues, cr) {
@@ -145,7 +149,7 @@ class ExperimentResults {
 
   Map<String, dynamic> createExperimentResult(run, result, String? message) {
     final response = {
-      "experimentRun": run,
+      "projectRun": run,
       "requestHistory": requestHistory,
       "result": result
     };

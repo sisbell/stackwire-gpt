@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:eom/io/io.dart';
+import 'io.dart';
 
 class NativeIO implements IO {
 

@@ -1,0 +1,21 @@
+{
+  "project_name": "product-summary",
+  "project_version": "2.1",
+  "project_runs": 2,
+  "output_dir": "output",
+  "api_key_file": "../../api_key",
+  "ai_config": {
+    "model": "gpt-3.5-turbo",
+    "temperature": 0.3,
+    "top_p": 1,
+    "max_tokens": 500
+  },
+  "batches": [
+    {
+      "id": "bid-1",
+      "prompt": "product.prompt",
+      "system_message_file": "../system-message.txt",
+      "data_file": "data.json"
+    }
+  ]
+}

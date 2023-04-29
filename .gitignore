@@ -1,8 +1,10 @@
 .dart_tool/
 .packages
 .idea/
-pubspec.lock
 *.iml
 output/
 data/
 build/
+.DS_Store
+api_key
+.run
