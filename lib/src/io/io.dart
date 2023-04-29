@@ -9,4 +9,3 @@ abstract class IO {
 
   void createDirectoryIfNotExist(String dirName);
 }
-

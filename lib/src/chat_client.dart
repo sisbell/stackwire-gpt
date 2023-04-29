@@ -20,7 +20,8 @@ Future<Map<String, dynamic>> sendHttpPostRequest(requestBody, apiKey) async {
       print('Request failed with status code: ${response.statusCode}');
       return {"errorCode": response.statusCode};
     }
-    Map<String, dynamic> responseBody = jsonDecode(await readResponse(response));
+    Map<String, dynamic> responseBody =
+        jsonDecode(await readResponse(response));
     responseBody.addAll({"requestTime": (endTime - startTime)});
     return responseBody;
   } catch (e) {

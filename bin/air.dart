@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:args/command_runner.dart';
-import 'package:gpt/batch.dart';
-import 'package:gpt/experiment.dart';
-import 'package:gpt/io/native_io.dart';
-import 'package:gpt/reporter.dart';
+import 'package:gpt/src/batch.dart';
+import 'package:gpt/src/experiment.dart';
+import 'package:gpt/src/io/native_io.dart';
+import 'package:gpt/src/reporter.dart';
 
 final io = NativeIO();
 
@@ -57,8 +57,10 @@ class ExperimentCommand extends Command {
         promptChain.map((e) async => await io.readFileAsString(e)).toList();
     List<String> promptTemplates = await Future.wait(futurePrompts);
 
-    io.createDirectoryIfNotExist("$outputDirName/$projectName/$projectVersion/data");
-    io.writeMap(aiConfig, "$outputDirName/$projectName/$projectVersion/config.ai");
+    io.createDirectoryIfNotExist(
+        "$outputDirName/$projectName/$projectVersion/data");
+    io.writeMap(
+        aiConfig, "$outputDirName/$projectName/$projectVersion/config.ai");
 
     final projectConfig = {
       "apiKey": apiKey,
@@ -116,8 +118,10 @@ class BatchCommand extends Command {
     final dataFile = batch["data_file"];
     Map<String, dynamic> data = await readProjectFile(dataFile);
 
-    io.createDirectoryIfNotExist("$outputDirName/$projectName/$projectVersion/data");
-    io.writeMap(aiConfig, "$outputDirName/$projectName/$projectVersion/config.ai");
+    io.createDirectoryIfNotExist(
+        "$outputDirName/$projectName/$projectVersion/data");
+    io.writeMap(
+        aiConfig, "$outputDirName/$projectName/$projectVersion/config.ai");
 
     final projectConfig = {
       "apiKey": apiKey,

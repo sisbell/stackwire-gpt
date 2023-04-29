@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:gpt/experiment.dart';
+import 'package:gpt/src/experiment.dart';
 
 import 'chat_client.dart';
 import 'prompts.dart';

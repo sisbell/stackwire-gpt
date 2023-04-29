@@ -4,7 +4,6 @@ import 'dart:io';
 import 'io.dart';
 
 class NativeIO implements IO {
-
   Future<void> writeMetrics(responseBody, promptFileName, filePath) async {
     final responseId = responseBody["id"];
     final usage = responseBody["usage"];
@@ -14,13 +13,15 @@ class NativeIO implements IO {
 
     final file = File(filePath);
     bool exists = await file.exists();
-    if(!exists) {
-      await file.writeAsString("request_id, prompt_name, request_time, prompt_tokens, completion_tokens, total_tokens\n");
+    if (!exists) {
+      await file.writeAsString(
+          "request_id, prompt_name, request_time, prompt_tokens, completion_tokens, total_tokens\n");
     }
     final sink = File(filePath).openWrite(mode: FileMode.append);
     try {
       final requestTime = responseBody['requestTime'];
-      sink.write("$responseId, $promptFileName, $requestTime, $promptTokens, $completionTokens, $totalTokens\n");
+      sink.write(
+          "$responseId, $promptFileName, $requestTime, $promptTokens, $completionTokens, $totalTokens\n");
     } catch (e) {
       throw Exception('Error occurred while writing file: $e');
     } finally {
@@ -65,5 +66,3 @@ class NativeIO implements IO {
     }
   }
 }
-
-

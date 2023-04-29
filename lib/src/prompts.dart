@@ -27,15 +27,15 @@ void addPromptValues(content, responseFormat, promptValues, fixJson) {
 
 RegExp placeholderPattern = RegExp(r'\$\{([^\}]+)\}');
 
-String createPrompt(String template, templateProperties)  {
+String createPrompt(String template, templateProperties) {
   String modifiedTemplate = template.replaceAllMapped(placeholderPattern,
-          (Match match) => templateProperties[match[1]] ?? match[0]);
+      (Match match) => templateProperties[match[1]] ?? match[0]);
   return modifiedTemplate;
 }
 
-String createPromptByIndex(String template, templateProperties, index)  {
+String createPromptByIndex(String template, templateProperties, index) {
   String modifiedTemplate = template.replaceAllMapped(placeholderPattern,
-          (Match match) => templateProperties[match[1]][index] ?? match[0]);
+      (Match match) => templateProperties[match[1]][index] ?? match[0]);
   return modifiedTemplate;
 }
 
@@ -46,5 +46,6 @@ String? _extractJson(content) {
     return jsonMatch.group(1)!;
   } else {
     print('No JSON string found in the input.');
+    return null;
   }
 }
