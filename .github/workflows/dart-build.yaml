@@ -31,10 +31,10 @@ jobs:
         run: dart pub get
 
       - name: Build
-        run: dart compile exe bin/gpt.dart -o gpt
+        run: dart compile exe bin/air.dart -o air
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: gpt-${{ matrix.os }}
-          path: ./gpt
+          name: air-${{ matrix.os }}
+          path: ./air

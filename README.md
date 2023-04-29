@@ -98,11 +98,11 @@ You may include more than one batch object in the array.
 
 To run the batch command with _id_ bid-1
 
-> gpt batch -p product.eom --id bid-1
+> air batch -p product.eom --id bid-1
 
 If you don't specify the id, it will default to the first batch in the array.
 
-> gpt batch -p product.eom
+> air batch -p product.eom
 
 Your calls to OpenAI will be project_runs * {number of array items in data file}. In the case above, its 2 * 2 = 4 
 
@@ -189,7 +189,7 @@ For a simple experiment, just leave **prompts.chain_runs** at 1.
 
 To run the experiment command. 
 
-> gpt experiment -p project-simple.eom --id exp-1
+> air experiment -p project-simple.eom --id exp-1
 
 This runs with simple-story.prompt 5 times. The calculated prompt for the experiment will be
 ````
@@ -247,7 +247,7 @@ the AI may add in addition to the JSON response.
 
 To run the experiment command
 
-> gpt experiment -p project-single.eom --id exp-1
+> air experiment -p project-single.eom --id exp-1
 
 On the first (chain) request, the prompt sent to OpenAI will be
 ```
@@ -367,7 +367,7 @@ This will be clearer in the explanation below.
 
 To run the experiment
 
-> gpt experiment -p project-chain.eom --id exp-1
+> air experiment -p project-chain.eom --id exp-1
 
 The **first** request will look like
 
@@ -506,20 +506,24 @@ chatcmpl-774QYzgnx9x3UjxPjd4ef4lotUPI1, structured-story.prompt, 5668, 190, 72, 
 chatcmpl-774QelDpcSp02xIJSH2kpdj1WyNsJ, character-action.prompt, 2057, 111, 23, 134
 ```
 
+## Install Program
+If you have dart installed, you can use this program with the following command
+
+> dart pub global activate air
+> 
 ## Download Program
-You can build this project yourself. Or download the gpt executable for your platform from
-Artifacts. They are under the Actions tab. Unzip after downloading.
+Download the air executable for your platform from Artifacts. They are under the Actions tab. Unzip after downloading.
 
 https://docs.github.com/en/actions/managing-workflow-runs/downloading-workflow-artifacts
 
 For macos and linux you will need to make the file executable
-```agsl
-chmod a+x gpt
+```
+chmod a+x air
 ```
 
 ## Building this project
-Make sure that you have dart installed. And then from the cli directory root
+Make sure that you have dart installed. And then from the directory root
 > dart pub get
 > 
-> dart compile exe bin/gpt.dart -o gpt
+> dart compile exe bin/gpt.dart -o air
 
