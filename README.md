@@ -509,7 +509,7 @@ chatcmpl-774QelDpcSp02xIJSH2kpdj1WyNsJ, character-action.prompt, 2057, 111, 23, 
 ## Install Program
 If you have dart installed, you can use this program with the following command
 
-> dart pub global activate air
+> dart pub global activate gpt
 > 
 ## Download Program
 Download the air executable for your platform from Artifacts. They are under the Actions tab. Unzip after downloading.
@@ -525,5 +525,24 @@ chmod a+x air
 Make sure that you have dart installed. And then from the directory root
 > dart pub get
 > 
-> dart compile exe bin/gpt.dart -o air
+> dart compile exe bin/air.dart -o air
+
+## Command Help
+> air --help
+
+```
+A command line tool for running GPT commands
+
+Usage: gpt <command> [arguments]
+
+Global options:
+-h, --help    Print this usage information.
+
+Available commands:
+  batch        Run batch program
+  experiment   Run an experiment and output metrics.
+
+Run "gpt help <command>" for more information about a command.
+
+```
 
