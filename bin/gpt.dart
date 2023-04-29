@@ -9,7 +9,7 @@ import 'package:gpt/reporter.dart';
 final io = NativeIO();
 
 void main(List<String> arguments) async {
-  CommandRunner("gpt", "A command line tool for testing of OpenAI APIs")
+  CommandRunner("gpt", "A command line tool for running GPT commands")
     ..addCommand(BatchCommand())
     ..addCommand(ExperimentCommand())
     ..run(arguments);

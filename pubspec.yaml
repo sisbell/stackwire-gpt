@@ -1,5 +1,5 @@
 name: gpt
-description: A command line app for testing of OpenAI APIs.
+description: A command line tool for running GPT commands.
 version: 0.2.0
 repository: https://github.com/sisbell/stackwire-gpt
 issue_tracker: https://github.com/sisbell/stackwire-gpt/issues
