@@ -9,10 +9,6 @@ class Reporter {
 
   Reporter(this.io);
 
-  void createDirectoryIfNotExist(directory) {
-    io.createDirectoryIfNotExist(directory);
-  }
-
   Future<void> writeMetrics(responseBody, promptFileName, filePath) async {
     io.writeMetrics(responseBody, promptFileName, filePath);
   }

@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:args/command_runner.dart';
-import 'package:gpt/src/batch.dart';
-import 'package:gpt/src/experiment.dart';
-import 'package:gpt/src/image.dart';
+import 'package:gpt/src/commands/batch.dart';
+import 'package:gpt/src/commands/experiment.dart';
+import 'package:gpt/src/commands/image.dart';
 import 'package:gpt/src/io/native_io.dart';
 import 'package:gpt/src/prompts.dart';
 import 'package:gpt/src/reporter.dart';
@@ -18,12 +18,7 @@ void main(List<String> arguments) async {
     ..run(arguments);
 }
 
-Future<Map<String, dynamic>> readProjectFile(String filePath) async {
-  String jsonString = await io.readFileAsString(filePath);
-  return jsonDecode(jsonString);
-}
-
-class ExperimentCommand extends Command {
+class ExperimentCommand extends ChatCommand {
   ExperimentCommand() {
     argParser.addOption('projectFile', abbr: 'p');
     argParser.addOption('id');
@@ -35,17 +30,10 @@ class ExperimentCommand extends Command {
   @override
   String get name => "experiment";
 
-  void run() async {
-    final reporter = Reporter(io);
+  @override
+  Future<void> run() async {
+    await super.run();
     final id = argResults?['id'];
-    String projectFile = argResults?['projectFile'] ?? 'project.eom';
-    Map<String, dynamic> project = await readProjectFile(projectFile);
-    final apiKeyFile = project['api_key_file'] ?? "api_key";
-    final apiKey = await io.readFileAsString(apiKeyFile);
-    final aiConfig = project["ai_config"];
-    final outputDirName = project['output_dir'] ?? "output";
-    final projectName = project["project_name"];
-    final projectVersion = project["project_version"];
     final experiments = project["experiments"];
     final experiment =
         (id == null) ? experiments[0] : getObjectById(experiments, id);
@@ -59,32 +47,23 @@ class ExperimentCommand extends Command {
     List<Future<String>> futurePrompts =
         promptChain.map((e) async => await io.readFileAsString(e)).toList();
     List<String> promptTemplates = await Future.wait(futurePrompts);
-
-    io.createDirectoryIfNotExist(
-        "$outputDirName/$projectName/$projectVersion/data");
-    io.writeMap(
-        aiConfig, "$outputDirName/$projectName/$projectVersion/config.ai");
-
-    final projectConfig = {
-      "apiKey": apiKey,
+    final pluginConfig = {
       "chainRuns": chainRuns,
       "excludesMessageHistory": prompts["excludesMessageHistory"] ?? [],
       "fixJson": prompts["fixJson"] ?? false,
-      "outputDir": outputDirName,
-      "projectName": projectName,
-      "projectVersion": projectVersion,
-      "projectRuns": project["project_runs"] ?? 1,
       "promptChains": prompts['chain'],
       "promptProperties": prompts['properties'] ?? {},
       "promptTemplates": promptTemplates,
       "responseFormat": project['response_format'] ?? "text",
       "systemMessage": systemMessage
     };
-    await runExperiment(projectConfig, aiConfig, reporter);
+    projectConfig.addAll(pluginConfig);
+    final command = ExperimentGptCommand(projectConfig, reporter, io);
+    await command.run();
   }
 }
 
-class BatchCommand extends Command {
+class BatchCommand extends ChatCommand {
   BatchCommand() {
     argParser.addOption('projectFile', abbr: 'p');
     argParser.addOption('id');
@@ -96,22 +75,12 @@ class BatchCommand extends Command {
   @override
   String get name => "batch";
 
-  void run() async {
-    final reporter = Reporter(io);
-
-    String projectFile = argResults?['projectFile'] ?? 'project.eom';
-    final batchId = argResults?['id'];
-    Map<String, dynamic> project = await readProjectFile(projectFile);
-
-    final aiConfig = project["ai_config"];
-    final apiKeyFile = project['api_key_file'] ?? "api_key";
-    final apiKey = await io.readFileAsString(apiKeyFile);
-    final outputDirName = project['output_dir'] ?? "output";
-    final projectName = project["project_name"];
-    final projectVersion = project["project_version"];
+  @override
+  Future<void> run() async {
+    await super.run();
+    final id = argResults?['id'];
     final batches = project["batches"];
-    final batch =
-        (batchId == null) ? batches[0] : getObjectById(batches, batchId);
+    final batch = (id == null) ? batches[0] : getObjectById(batches, id);
     final promptFile = batch["prompt"];
     final promptTemplate = await io.readFileAsString(promptFile);
     String? systemMessageFile = batch['system_message_file'];
@@ -119,28 +88,18 @@ class BatchCommand extends Command {
         ? await io.readFileAsString(systemMessageFile)
         : null;
     final dataFile = batch["data_file"];
-    Map<String, dynamic> data = await readProjectFile(dataFile);
-
-    io.createDirectoryIfNotExist(
-        "$outputDirName/$projectName/$projectVersion/data");
-    io.writeMap(
-        aiConfig, "$outputDirName/$projectName/$projectVersion/config.ai");
-
-    final projectConfig = {
-      "apiKey": apiKey,
-      "data": data,
-      "outputDir": outputDirName,
-      "projectName": projectName,
-      "projectVersion": projectVersion,
-      "projectRuns": project["project_runs"] ?? 1,
+    Map<String, dynamic> data = await readJsonFile(dataFile);
+    final pluginConfig = {
       "promptTemplate": promptTemplate,
       "systemMessage": systemMessage
     };
-    await runBatch(projectConfig, aiConfig, reporter);
+    projectConfig.addAll(pluginConfig);
+    final command = BatchGptCommand(projectConfig, reporter, io);
+    await command.run();
   }
 }
 
-class ImageCommand extends Command {
+class ImageCommand extends ProjectInitializeCommand {
   ImageCommand() {
     argParser.addOption('projectFile', abbr: 'p');
     argParser.addOption('id');
@@ -152,28 +111,16 @@ class ImageCommand extends Command {
   @override
   String get name => "image";
 
-  void run() async {
-    final reporter = Reporter(io);
-    String projectFile = argResults?['projectFile'] ?? 'project.eom';
+  @override
+  Future<void> run() async {
+    await super.run();
     final id = argResults?['id'];
-    Map<String, dynamic> project = await readProjectFile(projectFile);
-    final apiKeyFile = project['api_key_file'] ?? "api_key";
-    final apiKey = await io.readFileAsString(apiKeyFile);
-    final outputDirName = project['output_dir'] ?? "output";
-    final projectName = project["project_name"];
-    final projectVersion = project["project_version"];
     final images = project["images"];
     final image = (id == null) ? images[0] : getObjectById(images, id);
-
-    final projectConfig = {
-      "apiKey": apiKey,
-      "outputDir": outputDirName,
-      "projectName": projectName,
-      "projectVersion": projectVersion,
-      "projectRuns": project["project_runs"] ?? 1,
-      "images": await createImageConfig(image)
-    };
-    await runImage(projectConfig, reporter);
+    final pluginConfig = {"images": await createImageConfig(image)};
+    projectConfig.addAll(pluginConfig);
+    final command = ImageGptCommand(projectConfig, reporter, io);
+    await command.run();
   }
 }
 
@@ -186,7 +133,7 @@ Future<List<dynamic>> createImageConfig(image) async {
   final imageCount = image["image_count"];
   final sizes = image["sizes"];
   final imageConfigs = [];
-  for(int size in sizes) {
+  for (int size in sizes) {
     final imageConfig = {
       "prompt": prompt,
       "n": imageCount,
@@ -217,4 +164,55 @@ Map<String, dynamic>? getObjectById(List<dynamic> array, String id) {
     }
   }
   return null;
+}
+
+abstract class ChatCommand extends ProjectInitializeCommand {
+  @override
+  Future<void> run() async {
+    await super.run();
+    final pluginConfig = {
+      "aiConfig": project["ai_config"],
+      "projectRuns": project["project_runs"] ?? 1
+    };
+    projectConfig.addAll(pluginConfig);
+    io.writeMap(project["ai_config"], "$reportDir/config.ai");
+  }
+}
+
+abstract class ProjectInitializeCommand extends Command {
+  final reporter = Reporter(io);
+
+  late Map<String, dynamic> project;
+
+  late Map<String, dynamic> projectConfig;
+
+  late String reportDir;
+
+  @override
+  Future<void> run() async {
+    String projectFile = argResults?['projectFile'] ?? 'project.eom';
+    project = await readJsonFile(projectFile);
+    final apiKeyFile = project['api_key_file'] ?? "api_key";
+    final apiKey = await io.readFileAsString(apiKeyFile);
+    final outputDirName = project['output_dir'] ?? "output";
+    final projectName = project["project_name"];
+    final projectVersion = project["project_version"];
+    reportDir = "$outputDirName/$projectName/$projectVersion";
+    final dataDir = "$reportDir/data";
+    io.createDirectoryIfNotExist(dataDir);
+
+    projectConfig = {
+      "apiKey": apiKey,
+      "dataDir": dataDir,
+      "outputDir": outputDirName,
+      "projectName": projectName,
+      "projectVersion": projectVersion,
+      "reportDir": reportDir
+    };
+  }
+
+  Future<Map<String, dynamic>> readJsonFile(String filePath) async {
+    String jsonString = await io.readFileAsString(filePath);
+    return jsonDecode(jsonString);
+  }
 }

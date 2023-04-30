@@ -4,6 +4,7 @@ import 'dart:io';
 import 'io.dart';
 
 class NativeIO implements IO {
+  @override
   Future<void> writeMetrics(responseBody, promptFileName, filePath) async {
     final responseId = responseBody["id"];
     final usage = responseBody["usage"];
@@ -29,6 +30,7 @@ class NativeIO implements IO {
     }
   }
 
+  @override
   Future<String> readFileAsString(String filePath) async {
     File file = File(filePath);
     try {
@@ -39,6 +41,7 @@ class NativeIO implements IO {
     }
   }
 
+  @override
   Future<void> writeMap(Map<String, dynamic> data, String filePath) async {
     File file = File(filePath);
     try {
@@ -49,6 +52,7 @@ class NativeIO implements IO {
     }
   }
 
+  @override
   Future<void> writeString(String content, String filePath) async {
     final file = File(filePath);
     try {
@@ -58,6 +62,7 @@ class NativeIO implements IO {
     }
   }
 
+  @override
   void createDirectoryIfNotExist(String dirName) {
     Directory directory = Directory(dirName);
     if (!directory.existsSync()) {
