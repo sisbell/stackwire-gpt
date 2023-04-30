@@ -108,6 +108,10 @@ The output will be giving in the following format
 ```
 The images will be downloaded and put in the directory **${output}/${projectName}/${projectVersion}/images**
 
+![image](https://user-images.githubusercontent.com/64116/235335686-ebd7245e-5401-4275-b3a6-73e0c55635ae.png)
+![image](https://user-images.githubusercontent.com/64116/235335738-70e0c076-f845-4341-9895-bbf10bcede0a.png)
+![image](https://user-images.githubusercontent.com/64116/235335782-ce438b16-45eb-4413-a12f-ca33136a63b2.png)
+
 
 ### Batch Command
 First create a prompt file. Borrowing an example prompt from DeepLearning.AI, create a prompt file. 
