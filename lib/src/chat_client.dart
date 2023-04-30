@@ -1,21 +1,24 @@
 import 'dart:convert';
 import 'dart:io';
 
-Future<Map<String, dynamic>> makeChatCompletionRequest(requestBody, apiKey) async {
+Future<Map<String, dynamic>> makeChatCompletionRequest(
+    requestBody, apiKey) async {
   return sendHttpPostRequest(requestBody, apiKey, "v1/chat/completions");
 }
 
-Future<Map<String, dynamic>> makeImageGenerationRequest(requestBody, apiKey) async {
+Future<Map<String, dynamic>> makeImageGenerationRequest(
+    requestBody, apiKey) async {
   return sendHttpPostRequest(requestBody, apiKey, "v1/images/generations");
 }
 
-Future<Map<String, dynamic>> sendHttpPostRequest(requestBody, apiKey, urlPath) async {
+Future<Map<String, dynamic>> sendHttpPostRequest(
+    requestBody, apiKey, urlPath) async {
   print("Making call to OpenAi");
   try {
     final client = HttpClient();
     final startTime = DateTime.now().millisecondsSinceEpoch;
-    final request = await client
-        .postUrl(Uri.parse("https://api.openai.com/$urlPath"));
+    final request =
+        await client.postUrl(Uri.parse("https://api.openai.com/$urlPath"));
     request.headers.add(HttpHeaders.contentTypeHeader, "application/json");
     request.headers.add(HttpHeaders.authorizationHeader, "Bearer $apiKey");
     request.write(requestBody);
