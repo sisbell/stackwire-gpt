@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:args/command_runner.dart';
 import 'package:gpt/src/batch.dart';
 import 'package:gpt/src/experiment.dart';
+import 'package:gpt/src/image.dart';
 import 'package:gpt/src/io/native_io.dart';
+import 'package:gpt/src/prompts.dart';
 import 'package:gpt/src/reporter.dart';
 
 final io = NativeIO();
@@ -12,6 +14,7 @@ void main(List<String> arguments) async {
   CommandRunner("gpt", "A command line tool for running GPT commands")
     ..addCommand(BatchCommand())
     ..addCommand(ExperimentCommand())
+    ..addCommand(ImageCommand())
     ..run(arguments);
 }
 
@@ -134,6 +137,76 @@ class BatchCommand extends Command {
       "systemMessage": systemMessage
     };
     await runBatch(projectConfig, aiConfig, reporter);
+  }
+}
+
+class ImageCommand extends Command {
+  ImageCommand() {
+    argParser.addOption('projectFile', abbr: 'p');
+    argParser.addOption('id');
+  }
+
+  @override
+  String get description => "Create an Image";
+
+  @override
+  String get name => "image";
+
+  void run() async {
+    final reporter = Reporter(io);
+    String projectFile = argResults?['projectFile'] ?? 'project.eom';
+    final id = argResults?['id'];
+    Map<String, dynamic> project = await readProjectFile(projectFile);
+    final apiKeyFile = project['api_key_file'] ?? "api_key";
+    final apiKey = await io.readFileAsString(apiKeyFile);
+    final outputDirName = project['output_dir'] ?? "output";
+    final projectName = project["project_name"];
+    final projectVersion = project["project_version"];
+    final images = project["images"];
+    final image = (id == null) ? images[0] : getObjectById(images, id);
+
+    final projectConfig = {
+      "apiKey": apiKey,
+      "outputDir": outputDirName,
+      "projectName": projectName,
+      "projectVersion": projectVersion,
+      "projectRuns": project["project_runs"] ?? 1,
+      "images": await createImageConfig(image)
+    };
+    await runImage(projectConfig, reporter);
+  }
+}
+
+Future<List<dynamic>> createImageConfig(image) async {
+  final imagePromptFile = image["prompt"];
+  final promptTemplate = await io.readFileAsString(imagePromptFile);
+  final templateProperties = image["properties"];
+  final prompt = createPrompt(promptTemplate, templateProperties);
+  final responseFormat = image["response_format"];
+  final imageCount = image["image_count"];
+  final sizes = image["sizes"];
+  final imageConfigs = [];
+  for(int size in sizes) {
+    final imageConfig = {
+      "prompt": prompt,
+      "n": imageCount,
+      "size": createImageSize(size),
+      "response_format": responseFormat
+    };
+    imageConfigs.add(imageConfig);
+  }
+  return imageConfigs;
+}
+
+String createImageSize(size) {
+  if (size == 256) {
+    return "256x256";
+  } else if (size == 512) {
+    return "512x512";
+  } else if (size == 1024) {
+    return "1024x1024";
+  } else {
+    throw Exception("Invalid image size: $size");
   }
 }
 

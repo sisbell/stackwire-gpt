@@ -24,10 +24,90 @@ sk-gKtTxOumv4orO6cfWlh0ZK
 
 ## Usage
 The following are the use cases supported
+* [Generate Images](#generate-images)
 * [Batch Command](#batch-command)
 * [Simple Experiment](#simple-experiment)
 * [Chain Experiment with Single Prompt](#chain-experiment-with-single-prompt)
 * [Chain Experiment with Multiple Prompts](#chain-experiment-with-multiple-prompts)
+
+### Generate Images
+First, create a prompt file for images. Call it **image.prompt**.
+```
+Generate a picture of a ${creature} with ${feature}
+```
+Now create an eom file **project-image.eom**. 
+
+```json
+{
+  "project_name": "image-generation",
+  "project_version": "1.7",
+  "project_runs": 2,
+  "output_dir": "output",
+  "api_key_file": "../../api_key",
+  "images" : [
+    {
+      "id" : "img-unicorn",
+      "sizes": [256],
+      "image_count" : 2,
+      "response_format": "url",
+      "prompt" : "image.prompt",
+      "properties": {
+        "creature": "Unicorn",
+        "feature" : "a gold horn and wings"
+      }
+    },
+    {
+      "id" : "img-fish",
+      "sizes": [256,1024],
+      "image_count" : 2,
+      "response_format": "b64_json",
+      "prompt" : "image.prompt",
+      "properties": {
+        "creature": "fish",
+        "feature" : "giant eyes"
+      }
+    }
+  ]
+}
+```
+The properties under each image node will substitute into the prompt.
+
+```
+Generate a picture of a Unicorn with a gold horn and wings
+```
+and
+
+```
+Generate a picture of a fish with giant eyes
+```
+To generate the unicorn image, use the following command
+
+> air image -p project-image.eom --id img-unicorn
+
+The output will be giving in the following format
+
+```json
+{
+  "projectName": "image-generation",
+  "projectVersion": "1.2",
+  "results": [
+    {
+      "prompt": "Generate a picture of an Unicorn with a gold horn and wings",
+      "size": "256x256",
+      "images": [
+        {
+          "url": "https://oaidalleapiprodscus.blob.core.windows.net/private/org-R9v6DUYOa8z3TrS1kDzVfw0x/user-55ncQeNjGANmpsGB1LGsgRXF/..."
+        },
+        {
+          "url": "https://oaidalleapiprodscus.blob.core.windows.net/private/org-R9v6DUYOa8z3TrS1kDzVfw0x/user-55ncQeNjGANmpsGB1LGsgRXF/..."
+        }
+      ]
+    }
+  ]
+}
+```
+The images will be downloaded and put in the directory **${output}/${projectName}/${projectVersion}/images**
+
 
 ### Batch Command
 First create a prompt file. Borrowing an example prompt from DeepLearning.AI, create a prompt file. 
