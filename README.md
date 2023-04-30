@@ -96,10 +96,10 @@ The output will be giving in the following format
       "size": "256x256",
       "images": [
         {
-          "url": "https://oaidalleapiprodscus.blob.core.windows.net/private/org-R9v6DUYOa8z3TrS1kDzVfw0x/user-55ncQeNjGANmpsGB1LGsgRXF/..."
+          "url": "https://oaidalleapiprodscus.blob.core.windows.net/private/org-R9/user-55/..."
         },
         {
-          "url": "https://oaidalleapiprodscus.blob.core.windows.net/private/org-R9v6DUYOa8z3TrS1kDzVfw0x/user-55ncQeNjGANmpsGB1LGsgRXF/..."
+          "url": "https://oaidalleapiprodscus.blob.core.windows.net/private/org-R9/user-55/..."
         }
       ]
     }
