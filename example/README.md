@@ -1,5 +1,6 @@
-There are four example projects
+There are five example projects
 * Batch Command - demonstrates how to create a batch process using a data file
+* Image Generation - shows how to create images with the DALL-E API
 * Simple Experiment - shows how to run a single prompt multiple times
 * Chain Experiment with Single Prompt - shows how to run a single prompt in a chain
 * Chain Experiment with Multiple Prompts - shows how to run a multiple prompts in a chain

@@ -29,7 +29,7 @@ Future<void> runBatch(
       messageHistory.addUserMessage(prompt);
       aiConfig['messages'] = messageHistory.history;
       final requestBody = jsonEncode(aiConfig);
-      final responseBody = await sendHttpPostRequest(requestBody, apiKey);
+      final responseBody = await makeChatCompletionRequest(requestBody, apiKey);
       if (responseBody['errorCode'] != null) {
         throw Exception("Failed Request: ${responseBody['errorCode']}");
       }

@@ -44,7 +44,7 @@ Future<void> runExperiment(
           aiConfig['messages'] = messageHistory.history;
         }
         final requestBody = jsonEncode(aiConfig);
-        final responseBody = await sendHttpPostRequest(requestBody, apiKey);
+        final responseBody = await makeChatCompletionRequest(requestBody, apiKey);
         if (responseBody['errorCode'] != null) {
           await reporter.logFailedRequest(requestBody, dataDir, projectRun);
           experimentResults.addExperimentResult(projectRun, "FAILURE",
