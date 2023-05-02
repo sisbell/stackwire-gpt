@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:mirrors';
 
 import 'package:args/command_runner.dart';
@@ -10,7 +11,32 @@ final io = NativeIO();
 void main(List<String> arguments) async {
   CommandRunner("air", "A command line tool for running GPT commands")
     ..addCommand(RunCommand())
+    ..addCommand(CleanCommand())
     ..run(arguments);
+}
+
+class CleanCommand extends ProjectInitializeCommand {
+  @override
+  String get description => "Cleans project's output directory";
+
+  @override
+  String get name => "clean";
+
+  CleanCommand() {
+    argParser.addOption('projectFile', abbr: 'p');
+  }
+
+  @override
+  Future<void> run() async {
+    await super.run();
+    Directory directory = Directory(outputDirName);
+    if (directory.existsSync()) {
+      directory.deleteSync(recursive: true);
+      print("Output directory '$outputDirName' and its contents have been deleted.");
+    } else {
+      print("Output directory '$outputDirName' does not exist.");
+    }
+  }
 }
 
 class RunCommand extends ProjectInitializeCommand {
@@ -64,6 +90,8 @@ class RunCommand extends ProjectInitializeCommand {
 
 abstract class ProjectInitializeCommand extends Command {
 
+  late String outputDirName;
+
   late Map<String, dynamic> project;
 
   late Map<String, dynamic> projectConfig;
@@ -78,7 +106,7 @@ abstract class ProjectInitializeCommand extends Command {
     project = await readJsonFile(projectFile);
     final apiKeyFile = project['apiKeyFile'] ?? "api_key";
     final apiKey = await io.readFileAsString(apiKeyFile);
-    final outputDirName = project['outputDir'] ?? "output";
+    outputDirName = project['outputDir'] ?? "output";
     final projectName = project["projectName"];
     final projectVersion = project["projectVersion"];
     reportDir = "$outputDirName/$projectName/$projectVersion";
