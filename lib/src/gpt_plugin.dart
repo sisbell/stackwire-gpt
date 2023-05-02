@@ -30,6 +30,7 @@ abstract class GptPlugin {
   late String blockDataDir;
   late String blockId;
   late String pluginName;
+  late int blockRuns;
   var currentBlockRun = 0;
 
   GptPlugin(this._projectConfig, this.block, this.io) {
@@ -44,16 +45,35 @@ abstract class GptPlugin {
     blockDataDir = "$dataDir/$blockId";
   }
 
+  num apiCallCount() {
+    return 0;
+  }
+
   Future<void> init(execution, pluginConfiguration) async {}
 
   Future<void> report(results) async {}
+
+  Future<num> apiCallCountForBlock() async {
+    num result = 0;
+    final pluginConfiguration = block["configuration"];
+    final blockRuns = pluginConfiguration["blockRuns"] ?? 1;
+    for (var blockRun = 1; blockRun <= blockRuns; blockRun++) {
+      final executions = block["executions"];
+      for (var i = 0; i < executions.length; i++) {
+        final execution = executions[i];
+        await init(execution, pluginConfiguration);
+        result += apiCallCount();
+      }
+    }
+    return result;
+  }
 
   Future<void> execute() async {
     print("Running Project: $projectName-$projectVersion");
     print("BlockId: $blockId, PluginName: $pluginName");
     final startTime = DateTime.now();
     final pluginConfiguration = block["configuration"];
-    final blockRuns = pluginConfiguration["blockRuns"] ?? 1;
+    blockRuns = pluginConfiguration["blockRuns"] ?? 1;
     createDirectoryIfNotExist(blockDataDir);
     final blockResults = [];
     for (var blockRun = 1; blockRun <= blockRuns; blockRun++) {
@@ -63,9 +83,10 @@ abstract class GptPlugin {
       final executions = block["executions"];
 
       for (var i = 0; i < executions.length; i++) {
-        print("Starting execution: ${i + 1}");
         final execution = executions[i];
         await init(execution, pluginConfiguration);
+        print(
+            "Starting execution: ${i + 1} - Requires ${apiCallCount()} calls to OpenAI");
         await doExecution(results);
         await report(results);
         print("Finished execution: ${i + 1}");

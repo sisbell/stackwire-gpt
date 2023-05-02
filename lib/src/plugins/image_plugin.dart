@@ -8,6 +8,11 @@ class ImageGptPlugin extends GptPlugin {
   late List<dynamic> imageRequests;
 
   @override
+  num apiCallCount() {
+    return imageRequests.length;
+  }
+
+  @override
   Future<void> init(execution, pluginConfiguration) async {
     imagesDir = "$reportDir/images/$blockId";
     createDirectoryIfNotExist(imagesDir);

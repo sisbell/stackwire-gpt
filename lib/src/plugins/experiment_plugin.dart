@@ -24,6 +24,11 @@ class ExperimentGptPlugin extends GptPlugin {
   late String? systemMessage;
 
   @override
+  num apiCallCount() {
+    return chainRuns * promptChain.length;
+  }
+
+  @override
   Future<void> init(execution, pluginConfiguration) async {
     requestParams = Map.from(pluginConfiguration["requestParams"]);
     chainRuns = execution['chainRuns'] ?? 1;

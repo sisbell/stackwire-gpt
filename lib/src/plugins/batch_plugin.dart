@@ -12,6 +12,11 @@ class BatchGptPlugin extends GptPlugin {
   late String? systemMessage;
 
   @override
+  num apiCallCount() {
+    return batchData[batchData.keys.first].length;
+  }
+
+  @override
   Future<void> init(execution, pluginConfiguration) async {
     requestParams = Map.from(pluginConfiguration["requestParams"]);
     final promptFile = execution["prompt"];
