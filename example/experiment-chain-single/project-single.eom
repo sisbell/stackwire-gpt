@@ -1,29 +1,35 @@
 {
-  "project_name": "experiment-chain-single",
-  "project_version": "1.0",
-  "project_runs": 1,
-  "response_format": "text",
-  "output_dir": "output",
-  "api_key_file": "../../api_key",
-  "ai_config": {
-    "model": "gpt-3.5-turbo",
-    "temperature": 1.2,
-    "top_p": 1,
-    "max_tokens": 500
-  },
-  "experiments": [
+  "projectName": "experiment-chain-single",
+  "projectVersion": "1.1",
+  "apiKeyFile": "../../api_key",
+  "blocks": [
     {
-      "id" : "exp-1",
-      "prompts": {
-        "system_message_file": "../system-message.txt",
-        "chain_runs": 1,
-        "chain": [
-          "simple-story.prompt"
-        ],
-        "properties": {
-          "character": "Commander in Starfleet"
+      "blockId": "single-1",
+      "pluginName": "ExperimentGptPlugin",
+      "configuration": {
+        "blockRuns": 1,
+        "requestParams": {
+          "model": "gpt-3.5-turbo",
+          "temperature": 1.2,
+          "top_p": 1,
+          "max_tokens": 500
         }
-      }
+      },
+      "executions": [
+        {
+          "id": "exp-1",
+          "systemMessageFile": "../system-message.txt",
+          "responseFormat" : "json",
+          "chainRuns": 1,
+          "promptChain": [
+            "simple-story.prompt"
+          ],
+          "properties": {
+            "character": "Commander in Starfleet",
+            "mainCharacterName": ""
+          }
+        }
+      ]
     }
   ]
 }
