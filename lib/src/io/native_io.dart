@@ -56,7 +56,7 @@ class NativeIO implements IO {
   Future<void> writeString(String content, String filePath) async {
     final file = File(filePath);
     try {
-      await file.writeAsString(content, flush: true);
+      file.writeAsStringSync(content, flush: true);
     } catch (e) {
       throw Exception('Error occurred while writing file: $e');
     }

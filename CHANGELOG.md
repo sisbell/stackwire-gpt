@@ -1,3 +1,5 @@
+## 0.5.0
+- New plugin architecture. Standardized eom files. Standardized reports.
 ## 0.4.0
 - Image generation command
 ## 0.3.0

@@ -13,9 +13,12 @@ class Reporter {
     io.writeMetrics(responseBody, promptFileName, filePath);
   }
 
-  Future<void> writeResultsTo(experimentResults, reportDir) async {
-    await io.writeMap(experimentResults,
-        "$reportDir/${experimentResults["projectName"]}-${experimentResults["projectVersion"]}-report.json");
+  Future<void> writeResultsTo(results, reportDir) async {
+    final projectName = results["projectName"];
+    final projectVersion = results["projectVersion"];
+    final blockId = results["blockId"];
+    final fileName = "$projectName-$projectVersion-$blockId-report.json";
+    await io.writeMap(results, "$reportDir/$fileName");
   }
 
   Future<void> logFailedRequest(requestBody, dataDir, experimentRun) async {
