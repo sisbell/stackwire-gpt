@@ -1,31 +1,43 @@
 {
-  "project_name": "image-generation",
-  "project_version": "1.7",
-  "project_runs": 2,
-  "output_dir": "output",
-  "api_key_file": "../../api_key",
-  "images" : [
+  "projectName": "image-generation",
+  "projectVersion": "2.3",
+  "apiKeyFile": "../../api_key",
+  "blocks": [
     {
-      "id" : "img-unicorn",
-      "sizes": [256],
-      "image_count" : 2,
-      "response_format": "url",
-      "prompt" : "image.prompt",
-      "properties": {
-        "creature": "Unicorn",
-        "feature" : "a gold horn and wings"
-      }
-    },
-    {
-      "id" : "img-fish",
-      "sizes": [256,1024],
-      "image_count" : 2,
-      "response_format": "b64_json",
-      "prompt" : "image.prompt",
-      "properties": {
-        "creature": "fish",
-        "feature" : "giant eyes"
-      }
+      "blockId": "image-1",
+      "pluginName": "ImageGptPlugin",
+      "configuration": {
+        "blockRuns": 1
+      },
+      "executions": [
+        {
+          "id": "img-unicorn",
+          "sizes": [
+            256
+          ],
+          "imageCount": 1,
+          "responseFormat": "url",
+          "prompt": "image.prompt",
+          "properties": {
+            "creature": "Unicorn",
+            "feature": "a gold horn and wings"
+          }
+        },
+        {
+          "id": "img-fish",
+          "sizes": [
+            256,
+            512
+          ],
+          "imageCount": 1,
+          "responseFormat": "b64_json",
+          "prompt": "image.prompt",
+          "properties": {
+            "creature": "fish",
+            "feature": "giant eyes"
+          }
+        }
+      ]
     }
   ]
 }

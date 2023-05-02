@@ -1,37 +1,42 @@
 {
-  "project_name" : "experiment-chain-multiple",
-  "project_version" : "1.0",
-  "project_runs" : 1,
-  "response_format" : "json",
-  "output_dir" : "output",
-  "api_key_file": "../../api_key",
-  "ai_config" : {
-    "model": "gpt-3.5-turbo",
-    "temperature": 1.2,
-    "top_p": 1,
-    "max_tokens": 500
-  },
-  "experiments" : [
+  "projectName": "experiment-chain-multiple",
+  "projectVersion": "1.4",
+  "apiKeyFile": "../../api_key",
+  "blocks": [
     {
-      "id" : "exp-1",
-      "prompts" : {
-        "chain_runs" : 2,
-        "chain": [
-          "structured-story.prompt",
-          "character-action.prompt"
-        ],
-        "excludesMessageHistory" : [
-          "character-action.prompt"
-        ],
-        "fixJson" : true,
-        "properties" : {
-          "rank" : "Commander in Starfleet",
-          "show" : "The Original Star Trek",
-          "mainCharacterName": "",
-          "story": "",
-          "characterAction" : ""
+      "blockId": "chain-1",
+      "pluginName": "ExperimentGptPlugin",
+      "configuration": {
+        "blockRuns": 1,
+        "requestParams": {
+          "model": "gpt-3.5-turbo",
+          "temperature": 1.2,
+          "top_p": 1,
+          "max_tokens": 500
         }
-      }
+      },
+      "executions": [
+        {
+          "id": "exp-1",
+          "responseFormat" : "json",
+          "chainRuns": 2,
+          "promptChain": [
+            "structured-story.prompt",
+            "character-action.prompt"
+          ],
+          "excludesMessageHistory": [
+            "character-action.prompt"
+          ],
+          "fixJson": true,
+          "properties": {
+            "rank": "Commander in Starfleet",
+            "show": "The Original Star Trek",
+            "mainCharacterName": "",
+            "story": "",
+            "characterAction": ""
+          }
+        }
+      ]
     }
   ]
 }
