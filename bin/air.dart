@@ -4,7 +4,6 @@ import 'dart:mirrors';
 import 'package:args/command_runner.dart';
 import 'package:gpt/src/gpt_plugin.dart';
 import 'package:gpt/src/io/native_io.dart';
-import 'package:gpt/src/reporter.dart';
 
 final io = NativeIO();
 
@@ -48,9 +47,8 @@ class RunCommand extends ProjectInitializeCommand {
     ClassMirror pluginMirror =
         libraryMirror.declarations[Symbol(pluginName)] as ClassMirror;
     final gptPlugin = pluginMirror.newInstance(
-            Symbol(''), [projectConfig, block, reporter, io]).reflectee
+            Symbol(''), [projectConfig, block, io]).reflectee
         as GptPlugin;
-    await gptPlugin.init();
     await gptPlugin.execute();
   }
 
@@ -65,7 +63,6 @@ class RunCommand extends ProjectInitializeCommand {
 }
 
 abstract class ProjectInitializeCommand extends Command {
-  final reporter = Reporter(io);
 
   late Map<String, dynamic> project;
 
