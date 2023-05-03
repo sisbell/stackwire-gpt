@@ -20,10 +20,10 @@ class ImageGptPlugin extends GptPlugin {
   }
 
   @override
-  Future<void> doExecution(results) async {
+  Future<void> doExecution(results, dryRun) async {
     for (var i = 1; i <= imageRequests.length; i++) {
       final image = imageRequests[i - 1];
-      final response = await makeImageGenerationRequest(image);
+      final response = await makeImageGenerationRequest(image, dryRun);
       final result = {
         "prompt": image["prompt"],
         "size": image["size"],
@@ -102,8 +102,9 @@ class ImageGptPlugin extends GptPlugin {
     return uri.pathSegments.isNotEmpty ? uri.pathSegments.last : '';
   }
 
-  Future<Map<String, dynamic>> makeImageGenerationRequest(requestBody) async {
-    return sendHttpPostRequest(requestBody, "v1/images/generations");
+  Future<Map<String, dynamic>> makeImageGenerationRequest(
+      requestBody, dryRun) async {
+    return sendHttpPostRequest(requestBody, "v1/images/generations", dryRun);
   }
 
   Future<void> saveBase64AsPng(String base64String, String filePath) async {

@@ -48,10 +48,10 @@ class ExperimentGptPlugin extends GptPlugin {
   }
 
   @override
-  Future<void> doExecution(results) async {
+  Future<void> doExecution(results, dryRun) async {
     final messageHistory = MessageHistory(systemMessage);
     for (var chainRun = 1; chainRun <= chainRuns; chainRun++) {
-      print("Chain Run: $chainRun");
+      print("\nChain Run: $chainRun");
       for (int i = 0; i < promptTemplates.length; i++) {
         var promptFileName = promptChain[i];
         var promptTemplate = promptTemplates[i];
@@ -64,7 +64,11 @@ class ExperimentGptPlugin extends GptPlugin {
           messageHistory.addUserMessage(prompt);
           requestParams['messages'] = messageHistory.history;
         }
-        final responseBody = await makeChatCompletionRequest(requestParams);
+        final responseBody =
+            await makeChatCompletionRequest(requestParams, dryRun);
+        if (dryRun) {
+          continue;
+        }
         if (responseBody['errorCode'] != null) {
           results.add(createExperimentResult(
               "FAILURE", "Failed Request: ${responseBody['errorCode']}"));
@@ -128,8 +132,9 @@ class ExperimentGptPlugin extends GptPlugin {
     return {"result": result, "message": message};
   }
 
-  Future<Map<String, dynamic>> makeChatCompletionRequest(requestBody) async {
-    return sendHttpPostRequest(requestBody, "v1/chat/completions");
+  Future<Map<String, dynamic>> makeChatCompletionRequest(
+      requestBody, dryRun) async {
+    return sendHttpPostRequest(requestBody, "v1/chat/completions", dryRun);
   }
 
   Future<void> writeMetrics(responseBody, promptFileName, filePath) async {

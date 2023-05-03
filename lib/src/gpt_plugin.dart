@@ -68,7 +68,7 @@ abstract class GptPlugin {
     return result;
   }
 
-  Future<void> execute() async {
+  Future<void> execute(dryRun) async {
     print("Running Project: $projectName-$projectVersion");
     print("BlockId: $blockId, PluginName: $pluginName");
     final startTime = DateTime.now();
@@ -87,26 +87,30 @@ abstract class GptPlugin {
         await init(execution, pluginConfiguration);
         print(
             "Starting execution: ${i + 1} - Requires ${apiCallCount()} calls to OpenAI");
-        await doExecution(results);
-        await report(results);
-        print("Finished execution: ${i + 1}");
+        await doExecution(results, dryRun);
+        if (!dryRun) {
+          await report(results);
+        }
+        print("Finished execution: ${i + 1}\n");
       }
       final blockResult = {"blockRun": blockRun, "blockResults": results};
       blockResults.add(blockResult);
     }
-    print("Writing project report");
-    await writeProjectReport({
-      "projectName": projectName,
-      "projectVersion": projectVersion,
-      "blockId": blockId,
-      "blockRuns": blockResults
-    }, reportDir);
+    if (!dryRun) {
+      await writeProjectReport({
+        "projectName": projectName,
+        "projectVersion": projectVersion,
+        "blockId": blockId,
+        "blockRuns": blockResults
+      }, reportDir);
+    }
     final endTime = DateTime.now();
     Duration duration = endTime.difference(startTime);
-    print("Finished running project: ${duration.inSeconds} seconds");
+    print(
+        "\n--------\nFinished running project: ${duration.inSeconds} seconds");
   }
 
-  Future<void> doExecution(results) async {}
+  Future<void> doExecution(results, dryRun) async {}
 
   void createDirectoryIfNotExist(directory) {
     io.createDirectoryIfNotExist(directory);
@@ -126,10 +130,12 @@ abstract class GptPlugin {
     io.createDirectoryIfNotExist(directory);
     final responseId = responseBody["id"] ?? "";
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    await io.writeString(
-        requestBody, "$directory/$timestamp-$responseId-request.json");
-    await io.writeString(jsonEncode(responseBody),
-        "$directory/$timestamp-$responseId-response.json");
+    final outputRequestFile = "$directory/$timestamp-$responseId-request.json";
+    final outputResponseFile =
+        "$directory/$timestamp-$responseId-response.json";
+    print("\t\tResponse ID:  $responseId");
+    await io.writeString(requestBody, outputRequestFile);
+    await io.writeString(jsonEncode(responseBody), outputResponseFile);
   }
 
   Future<void> writeProjectReport(results, reportDir) async {
@@ -137,12 +143,19 @@ abstract class GptPlugin {
     final projectVersion = results["projectVersion"];
     final blockId = results["blockId"];
     final fileName = "$projectName-$projectVersion-$blockId-report.json";
+    print("Writing project report: $reportDir/$fileName");
     await io.writeMap(results, "$reportDir/$fileName");
   }
 
-  Future<Map<String, dynamic>> sendHttpPostRequest(requestBody, urlPath) async {
+  Future<Map<String, dynamic>> sendHttpPostRequest(
+      requestBody, urlPath, dryRun) async {
     final requestBodyStr = jsonEncode(requestBody);
-    print("Making call to OpenAI: $urlPath");
+    if (dryRun) {
+      print("\tPOST to https://api.openai.com/$urlPath");
+      print("\t\t$requestBodyStr");
+      return {};
+    }
+    print("\n\tMaking call to OpenAI: $urlPath");
     try {
       final client = HttpClient();
       final startTime = DateTime.now().millisecondsSinceEpoch;
@@ -153,11 +166,12 @@ abstract class GptPlugin {
       request.write(requestBodyStr);
       HttpClientResponse response = await request.close();
       final endTime = DateTime.now().millisecondsSinceEpoch;
-      print("requestTime: ${(endTime - startTime)}");
+      print("\t\trequestTime: ${(endTime - startTime)}");
       if (response.statusCode == 200) {
-        print('OpenAI Request successful.');
+        print('\t\tOpenAI Request successful.');
       } else {
-        print('OpenAI Request failed with status code: ${response.statusCode}');
+        print(
+            '\t\tOpenAI Request failed with status code: ${response.statusCode}');
         logFailedRequest(requestBodyStr);
         return {"errorCode": response.statusCode};
       }

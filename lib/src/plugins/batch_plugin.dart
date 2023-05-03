@@ -30,14 +30,18 @@ class BatchGptPlugin extends GptPlugin {
   }
 
   @override
-  Future<void> doExecution(results) async {
+  Future<void> doExecution(results, dryRun) async {
     final dataSize = batchData[batchData.keys.first].length;
     for (int i = 0; i < dataSize; i++) {
       final messageHistory = MessageHistory(systemMessage);
       final prompt = createPromptByIndex(promptTemplate, batchData, i);
       messageHistory.addUserMessage(prompt);
       requestParams['messages'] = messageHistory.history;
-      final responseBody = await makeChatCompletionRequest(requestParams);
+      final responseBody =
+          await makeChatCompletionRequest(requestParams, dryRun);
+      if (dryRun) {
+        continue;
+      }
       if (responseBody['errorCode'] != null) {
         throw Exception("Failed Request: ${responseBody['errorCode']}");
       }
@@ -47,11 +51,11 @@ class BatchGptPlugin extends GptPlugin {
       };
       results.add(result);
     }
-    print("Finished Run");
   }
 
-  Future<Map<String, dynamic>> makeChatCompletionRequest(requestBody) async {
-    return sendHttpPostRequest(requestBody, "v1/chat/completions");
+  Future<Map<String, dynamic>> makeChatCompletionRequest(
+      requestBody, dryRun) async {
+    return sendHttpPostRequest(requestBody, "v1/chat/completions", dryRun);
   }
 
   Future<Map<String, dynamic>> readJsonFile(String filePath) async {

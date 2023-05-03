@@ -98,26 +98,28 @@ class RunCommand extends ProjectInitializeCommand {
   RunCommand() {
     argParser.addOption('projectFile', abbr: 'p');
     argParser.addOption('blockId', abbr: 'b');
+    argParser.addFlag("dryRun", defaultsTo: false);
   }
 
   @override
   Future<void> run() async {
     await super.run();
     final blockId = argResults?['blockId'];
+    final dryRun = argResults?['dryRun'];
     if (blockId != null) {
       final block = getBlockById(blocks, blockId)!;
-      await executeBlock(block);
+      await executeBlock(block, dryRun);
     } else {
       for (var block in blocks) {
         print("Executing Block");
-        await executeBlock(block);
+        await executeBlock(block, dryRun);
       }
     }
   }
 
-  Future<void> executeBlock(block) async {
+  Future<void> executeBlock(block, dryRun) async {
     final gptPlugin = getPlugin(block, projectConfig);
-    await gptPlugin.execute();
+    await gptPlugin.execute(dryRun);
   }
 
   Map<String, dynamic>? getBlockById(List<dynamic> array, String id) {
