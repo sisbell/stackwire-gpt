@@ -1,6 +1,6 @@
 A command line tool for running GPT commands. This tool supports prompt-batching and prompt-chaining.
 
-> Currently only chat completion API is supported.
+> Currently only chat completion and image generation APIs are supported.
 
 This is the tool I use for refining the StanTrek and StanQuest games. It demonstrates some of the techniques I use for the game.
 
@@ -113,13 +113,17 @@ If your eom file name is _project.eom_, then simply type then following to run a
 
 > air run
 
+The commands for run are given below
 ```
 Runs a plugin
 
 Usage: air run [arguments]
 -h, --help           Print this usage information.
 -p, --projectFile    
--b, --blockId      
+-b, --blockId        
+    --[no-]dryRun    
+
+Run "air help" to see global options.
 ```
 ### Generate Images
 First, create a prompt file for images. Call it **image.prompt**.
@@ -932,10 +936,60 @@ Global options:
 -h, --help    Print this usage information.
 
 Available commands:
-  run   Runs a plugin
+  clean   Cleans project's output directory
+  count   Returns the number of OpenApiCalls that would be made
+  run     Runs a plugin
 
 Run "air help <command>" for more information about a command.
+```
+## Additional Commands
+### Clean Project
+To clean a project, run the following
 
+> air clean -p myproject
+
+This deletes the _output_ directory for the project.
+
+### Count of OpenAI Calls for a Project
+Running OpenAI calls with a tool can be costly if you mis-configure it. 
+To determine how many OpenAI calls a project will create, run the following command
+
+> air count -p myproject
+
+or for the count of a specific block
+
+> air count -p myproject -b myblockId
+It will output 
 
 ```
+Project: product-summary-2.8
+Total OpenAPI Calls would be 12
+```
 
+### DryRun
+If you want to know that your project is doing before incurring costs to OpenAI, use the dryRun flag.
+
+>  air run -p project-image.eom --dryRun
+
+```
+Executing Block
+Running Project: image-generation-2.3
+BlockId: image-1, PluginName: ImageGptPlugin
+----------
+Starting Block Run: 1
+Starting execution: 1 - Requires 1 calls to OpenAI
+	POST to https://api.openai.com/v1/images/generations
+		{"prompt":"Generate a picture of a Unicorn with a gold horn and wings","n":1,"size":"256x256","response_format":"url"}
+Finished execution: 1
+
+Starting execution: 2 - Requires 2 calls to OpenAI
+	POST to https://api.openai.com/v1/images/generations
+		{"prompt":"Generate a picture of a fish with giant eyes","n":1,"size":"256x256","response_format":"b64_json"}
+	POST to https://api.openai.com/v1/images/generations
+		{"prompt":"Generate a picture of a fish with giant eyes","n":1,"size":"512x512","response_format":"b64_json"}
+Finished execution: 2
+
+
+--------
+Finished running project: 0 seconds
+```
