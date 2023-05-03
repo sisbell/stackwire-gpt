@@ -5,32 +5,6 @@ import 'io.dart';
 
 class NativeIO implements IO {
   @override
-  Future<void> writeMetrics(responseBody, promptFileName, filePath) async {
-    final responseId = responseBody["id"];
-    final usage = responseBody["usage"];
-    final promptTokens = usage['prompt_tokens'];
-    final completionTokens = usage['completion_tokens'];
-    final totalTokens = usage['total_tokens'];
-
-    final file = File(filePath);
-    bool exists = await file.exists();
-    if (!exists) {
-      await file.writeAsString(
-          "request_id, prompt_name, request_time, prompt_tokens, completion_tokens, total_tokens\n");
-    }
-    final sink = File(filePath).openWrite(mode: FileMode.append);
-    try {
-      final requestTime = responseBody['requestTime'];
-      sink.write(
-          "$responseId, $promptFileName, $requestTime, $promptTokens, $completionTokens, $totalTokens\n");
-    } catch (e) {
-      throw Exception('Error occurred while writing file: $e');
-    } finally {
-      sink.close();
-    }
-  }
-
-  @override
   Future<String> readFileAsString(String filePath) async {
     File file = File(filePath);
     try {
@@ -46,7 +20,7 @@ class NativeIO implements IO {
     File file = File(filePath);
     try {
       String jsonString = jsonEncode(data);
-      await file.writeAsString(jsonString);
+      await file.writeAsString(jsonString, flush: true);
     } catch (e) {
       throw Exception('Error occurred while writing JSON to file: $e');
     }

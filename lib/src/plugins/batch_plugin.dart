@@ -1,41 +1,61 @@
 part of gpt_plugins;
 
 class BatchGptPlugin extends GptPlugin {
-  BatchGptPlugin(
-      super.projectConfig, super.executionBlock, super.reporter, super.io);
+  BatchGptPlugin(super.projectConfig, super.block, super.io);
+
+  late Map<String, dynamic> batchData;
+
+  late String promptTemplate;
+
+  late Map<String, dynamic> requestParams;
+
+  late String? systemMessage;
 
   @override
-  Future<void> doExecution(
-      execution, pluginConfiguration, results, blockRun) async {
-    final requestParams = Map.from(pluginConfiguration["requestParams"]);
+  num apiCallCount() {
+    return batchData[batchData.keys.first].length;
+  }
+
+  @override
+  Future<void> init(execution, pluginConfiguration) async {
+    requestParams = Map.from(pluginConfiguration["requestParams"]);
     final promptFile = execution["prompt"];
-    final promptTemplate = await io.readFileAsString(promptFile);
+    promptTemplate = await io.readFileAsString(promptFile);
     String? systemMessageFile = execution['systemMessageFile'];
-    final systemMessage = systemMessageFile != null
+    systemMessage = systemMessageFile != null
         ? await io.readFileAsString(systemMessageFile)
         : null;
     final dataFile = execution["dataFile"];
-    Map<String, dynamic> data = await readJsonFile(dataFile);
-    final dataSize = data[data.keys.first].length;
+    batchData = await readJsonFile(dataFile);
+  }
+
+  @override
+  Future<void> doExecution(results, dryRun) async {
+    final dataSize = batchData[batchData.keys.first].length;
     for (int i = 0; i < dataSize; i++) {
       final messageHistory = MessageHistory(systemMessage);
-      final prompt = createPromptByIndex(promptTemplate, data, i);
+      final prompt = createPromptByIndex(promptTemplate, batchData, i);
       messageHistory.addUserMessage(prompt);
       requestParams['messages'] = messageHistory.history;
-      final requestBody = jsonEncode(requestParams);
-      final responseBody = await makeChatCompletionRequest(requestBody, apiKey);
+      final responseBody =
+          await makeChatCompletionRequest(requestParams, dryRun);
+      if (dryRun) {
+        continue;
+      }
       if (responseBody['errorCode'] != null) {
         throw Exception("Failed Request: ${responseBody['errorCode']}");
       }
-      await reporter.logRequestAndResponse(
-          requestBody, responseBody, blockDataDir, blockRun);
       final result = {
-        "input": buildObject(data, i),
+        "input": buildObject(batchData, i),
         "output": responseBody["choices"][0]["message"]["content"]
       };
       results.add(result);
     }
-    print("Finished Run");
+  }
+
+  Future<Map<String, dynamic>> makeChatCompletionRequest(
+      requestBody, dryRun) async {
+    return sendHttpPostRequest(requestBody, "v1/chat/completions", dryRun);
   }
 
   Future<Map<String, dynamic>> readJsonFile(String filePath) async {

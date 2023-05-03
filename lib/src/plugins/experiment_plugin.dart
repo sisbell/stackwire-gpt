@@ -1,30 +1,57 @@
 part of gpt_plugins;
 
 class ExperimentGptPlugin extends GptPlugin {
-  ExperimentGptPlugin(
-      super.projectConfig, super.executionBlock, super.reporter, super.io);
+  ExperimentGptPlugin(super.projectConfig, super.block, super.io);
+
+  late int chainRuns;
+
+  late List<dynamic> excludesMessageHistory;
+
+  late bool fixJson;
+
+  late String metricsFile;
+
+  late List<String> promptTemplates;
+
+  late List<dynamic> promptChain;
+
+  late Map<String, dynamic> promptValues;
+
+  late Map<String, dynamic> requestParams;
+
+  late String responseFormat;
+
+  late String? systemMessage;
 
   @override
-  Future<void> doExecution(
-      execution, pluginConfiguration, results, blockRun) async {
-    final requestParams = Map.from(pluginConfiguration["requestParams"]);
-    final chainRuns = execution['chainRuns'] ?? 1;
-    final fixJson = execution["fixJson"] ?? false;
+  num apiCallCount() {
+    return chainRuns * promptChain.length;
+  }
+
+  @override
+  Future<void> init(execution, pluginConfiguration) async {
+    requestParams = Map.from(pluginConfiguration["requestParams"]);
+    chainRuns = execution['chainRuns'] ?? 1;
+    fixJson = execution["fixJson"] ?? false;
     String? systemMessageFile = execution['systemMessageFile'];
-    final systemMessage = systemMessageFile != null
+    systemMessage = systemMessageFile != null
         ? await io.readFileAsString(systemMessageFile)
         : null;
-    List<dynamic> promptChain = execution['promptChain'];
+    promptChain = execution['promptChain'];
     List<Future<String>> futurePrompts =
         promptChain.map((e) async => await io.readFileAsString(e)).toList();
-    List<String> promptTemplates = await Future.wait(futurePrompts);
-    final excludesMessageHistory = execution["excludesMessageHistory"] ?? [];
-    var promptValues = Map.from(execution['properties'] ?? {});
-    final responseFormat = execution['responseFormat'] ?? "text";
-    final metricsFile = "$reportDir/metrics-$blockId.csv";
+    promptTemplates = await Future.wait(futurePrompts);
+    excludesMessageHistory = execution["excludesMessageHistory"] ?? [];
+    promptValues = Map.from(execution['properties'] ?? {});
+    responseFormat = execution['responseFormat'] ?? "text";
+    metricsFile = "$reportDir/metrics-$blockId.csv";
+  }
+
+  @override
+  Future<void> doExecution(results, dryRun) async {
     final messageHistory = MessageHistory(systemMessage);
     for (var chainRun = 1; chainRun <= chainRuns; chainRun++) {
-      print("Chain Run: $chainRun");
+      print("\nChain Run: $chainRun");
       for (int i = 0; i < promptTemplates.length; i++) {
         var promptFileName = promptChain[i];
         var promptTemplate = promptTemplates[i];
@@ -37,11 +64,12 @@ class ExperimentGptPlugin extends GptPlugin {
           messageHistory.addUserMessage(prompt);
           requestParams['messages'] = messageHistory.history;
         }
-        final requestBody = jsonEncode(requestParams);
         final responseBody =
-            await makeChatCompletionRequest(requestBody, apiKey);
+            await makeChatCompletionRequest(requestParams, dryRun);
+        if (dryRun) {
+          continue;
+        }
         if (responseBody['errorCode'] != null) {
-          await reporter.logFailedRequest(requestBody, blockDataDir, blockRun);
           results.add(createExperimentResult(
               "FAILURE", "Failed Request: ${responseBody['errorCode']}"));
           throw Exception("Failed Request: ${responseBody['errorCode']}");
@@ -63,17 +91,12 @@ class ExperimentGptPlugin extends GptPlugin {
               content, responseBody, promptFileName, promptValues, chainRun));
           results.add(createExperimentResult(
               "FAILURE", "Failure Parsing JSON Response"));
-          await reporter.logRequestAndResponse(
-              requestBody, responseBody, blockDataDir, blockRun);
-          await reporter.writeMetrics(
-              responseBody, promptFileName, metricsFile);
           rethrow;
+        } finally {
+          await writeMetrics(responseBody, promptFileName, metricsFile);
         }
         results.add(createAssistantHistory(
             content, responseBody, promptFileName, promptValues, chainRun));
-        await reporter.logRequestAndResponse(
-            requestBody, responseBody, blockDataDir, blockRun);
-        await reporter.writeMetrics(responseBody, promptFileName, metricsFile);
       }
     }
   }
@@ -107,5 +130,35 @@ class ExperimentGptPlugin extends GptPlugin {
 
   Map<String, dynamic> createExperimentResult(result, String? message) {
     return {"result": result, "message": message};
+  }
+
+  Future<Map<String, dynamic>> makeChatCompletionRequest(
+      requestBody, dryRun) async {
+    return sendHttpPostRequest(requestBody, "v1/chat/completions", dryRun);
+  }
+
+  Future<void> writeMetrics(responseBody, promptFileName, filePath) async {
+    final responseId = responseBody["id"];
+    final usage = responseBody["usage"];
+    final promptTokens = usage['prompt_tokens'];
+    final completionTokens = usage['completion_tokens'];
+    final totalTokens = usage['total_tokens'];
+
+    final file = File(filePath);
+    bool exists = await file.exists();
+    if (!exists) {
+      await file.writeAsString(
+          "request_id, prompt_name, request_time, prompt_tokens, completion_tokens, total_tokens\n");
+    }
+    final sink = File(filePath).openWrite(mode: FileMode.append);
+    try {
+      final requestTime = responseBody['requestTime'];
+      sink.write(
+          "$responseId, $promptFileName, $requestTime, $promptTokens, $completionTokens, $totalTokens\n");
+    } catch (e) {
+      throw Exception('Error occurred while writing file: $e');
+    } finally {
+      sink.close();
+    }
   }
 }

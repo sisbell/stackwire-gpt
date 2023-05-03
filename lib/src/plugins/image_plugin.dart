@@ -1,20 +1,29 @@
 part of gpt_plugins;
 
 class ImageGptPlugin extends GptPlugin {
-  ImageGptPlugin(
-      super.projectConfig, super.executionBlock, super.reporter, super.io);
+  ImageGptPlugin(super.projectConfig, super.block, super.io);
+
+  late String imagesDir;
+
+  late List<dynamic> imageRequests;
 
   @override
-  Future<void> doExecution(
-      execution, pluginConfiguration, results, blockRun) async {
-    final imagesDir = "$reportDir/images/$blockId";
+  num apiCallCount() {
+    return imageRequests.length;
+  }
+
+  @override
+  Future<void> init(execution, pluginConfiguration) async {
+    imagesDir = "$reportDir/images/$blockId";
     createDirectoryIfNotExist(imagesDir);
-    final imageConfigs = await createImageConfigs(execution);
-    for (var i = 1; i <= imageConfigs.length; i++) {
-      final image = imageConfigs[i - 1];
-      final imageStr = jsonEncode(image);
-      final response = await makeImageGenerationRequest(imageStr, apiKey);
-      await reporter.logRequestAndResponse(imageStr, response, blockDataDir, i);
+    imageRequests = await createImageRequest(execution);
+  }
+
+  @override
+  Future<void> doExecution(results, dryRun) async {
+    for (var i = 1; i <= imageRequests.length; i++) {
+      final image = imageRequests[i - 1];
+      final response = await makeImageGenerationRequest(image, dryRun);
       final result = {
         "prompt": image["prompt"],
         "size": image["size"],
@@ -22,7 +31,10 @@ class ImageGptPlugin extends GptPlugin {
       };
       results.add(result);
     }
+  }
 
+  @override
+  Future<void> report(results) async {
     for (var result in results) {
       final images = result["images"];
       for (var image in images) {
@@ -41,12 +53,7 @@ class ImageGptPlugin extends GptPlugin {
     print("Finished generating images");
   }
 
-  String getLastPathSegment(String url) {
-    Uri uri = Uri.parse(url);
-    return uri.pathSegments.isNotEmpty ? uri.pathSegments.last : '';
-  }
-
-  Future<List<dynamic>> createImageConfigs(execution) async {
+  Future<List<dynamic>> createImageRequest(execution) async {
     final imagePromptFile = execution["prompt"];
     final promptTemplate = await io.readFileAsString(imagePromptFile);
     final templateProperties = execution["properties"];
@@ -54,17 +61,17 @@ class ImageGptPlugin extends GptPlugin {
     final responseFormat = execution["responseFormat"];
     final imageCount = execution["imageCount"];
     final sizes = execution["sizes"];
-    final imageConfigs = [];
+    final imageRequests = [];
     for (int size in sizes) {
-      final imageConfig = {
+      final imageRequest = {
         "prompt": prompt,
         "n": imageCount,
         "size": createImageSize(size),
         "response_format": responseFormat
       };
-      imageConfigs.add(imageConfig);
+      imageRequests.add(imageRequest);
     }
-    return imageConfigs;
+    return imageRequests;
   }
 
   String createImageSize(size) {
@@ -77,5 +84,32 @@ class ImageGptPlugin extends GptPlugin {
     } else {
       throw Exception("Invalid image size: $size");
     }
+  }
+
+  Future<void> downloadImage(String imageUrl, String savePath) async {
+    final response = await http.get(Uri.parse(imageUrl));
+    if (response.statusCode == 200) {
+      final bytes = response.bodyBytes;
+      final file = File(savePath);
+      await file.writeAsBytes(bytes);
+    } else {
+      throw Exception('Failed to download image: HTTP ${response.statusCode}');
+    }
+  }
+
+  String getLastPathSegment(String url) {
+    Uri uri = Uri.parse(url);
+    return uri.pathSegments.isNotEmpty ? uri.pathSegments.last : '';
+  }
+
+  Future<Map<String, dynamic>> makeImageGenerationRequest(
+      requestBody, dryRun) async {
+    return sendHttpPostRequest(requestBody, "v1/images/generations", dryRun);
+  }
+
+  Future<void> saveBase64AsPng(String base64String, String filePath) async {
+    Uint8List decodedBytes = base64Decode(base64String);
+    File file = File(filePath);
+    await file.writeAsBytes(decodedBytes);
   }
 }
