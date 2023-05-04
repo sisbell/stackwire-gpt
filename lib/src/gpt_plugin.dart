@@ -3,7 +3,6 @@ library gpt_plugins;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
@@ -12,9 +11,7 @@ import 'io/io.dart';
 import 'prompts.dart';
 
 part "plugins/batch_plugin.dart";
-
 part "plugins/experiment_plugin.dart";
-
 part "plugins/image_plugin.dart";
 
 abstract class GptPlugin {
@@ -31,6 +28,7 @@ abstract class GptPlugin {
   late String blockId;
   late String pluginName;
   late int blockRuns;
+  late String metricsFile;
   var currentBlockRun = 0;
 
   GptPlugin(this._projectConfig, this.block, this.io) {
@@ -43,6 +41,7 @@ abstract class GptPlugin {
     blockId = block["blockId"];
     pluginName = block["pluginName"];
     blockDataDir = "$dataDir/$blockId";
+    metricsFile = "$reportDir/metrics-$blockId.csv";
   }
 
   num apiCallCount() {
@@ -148,7 +147,7 @@ abstract class GptPlugin {
   }
 
   Future<Map<String, dynamic>> sendHttpPostRequest(
-      requestBody, urlPath, dryRun) async {
+      requestBody, urlPath, executionId, tag, dryRun) async {
     final requestBodyStr = jsonEncode(requestBody);
     if (dryRun) {
       print("\tPOST to https://api.openai.com/$urlPath");
@@ -180,6 +179,7 @@ abstract class GptPlugin {
           jsonDecode(await readResponse(response));
       responseBody.addAll({"requestTime": (endTime - startTime)});
       logRequestAndResponse(requestBodyStr, responseBody);
+      writeMetrics(responseBody, executionId, tag);
       return responseBody;
     } catch (e) {
       print('Error occurred during the request: $e');
@@ -194,5 +194,30 @@ abstract class GptPlugin {
 
   Future<String> readResponse(HttpClientResponse response) async {
     return response.transform(utf8.decoder).join();
+  }
+
+  Future<void> writeMetrics(responseBody, executionId, tag) async {
+    final responseId = responseBody["id"] ?? "N/A";
+    final usage = responseBody["usage"];
+    final promptTokens = usage?['prompt_tokens'] ?? 0;
+    final completionTokens = usage?['completion_tokens'] ?? 0;
+    final totalTokens = usage?['total_tokens'] ?? 0;
+
+    final file = File(metricsFile);
+    bool exists = await file.exists();
+    if (!exists) {
+      await file.writeAsString(
+          "request_id, executionId, tag, request_time, prompt_tokens, completion_tokens, total_tokens\n");
+    }
+    final sink = File(metricsFile).openWrite(mode: FileMode.append);
+    try {
+      final requestTime = responseBody['requestTime'];
+      sink.write(
+          "$responseId, $executionId, $tag, $requestTime, $promptTokens, $completionTokens, $totalTokens\n");
+    } catch (e) {
+      throw Exception('Error occurred while writing file: $e');
+    } finally {
+      sink.close();
+    }
   }
 }

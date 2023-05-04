@@ -38,7 +38,7 @@ blocks:
         top_p: 1
         max_tokens: 500
     executions:
-      - id: exp-1
+      - id: exp-2-import
         chainRuns: 2
         promptChain:
           - structured-story.prompt

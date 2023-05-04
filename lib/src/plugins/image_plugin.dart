@@ -3,6 +3,10 @@ part of gpt_plugins;
 class ImageGptPlugin extends GptPlugin {
   ImageGptPlugin(super.projectConfig, super.block, super.io);
 
+  late String executionId;
+
+  late String imagePromptFile;
+
   late String imagesDir;
 
   late List<dynamic> imageRequests;
@@ -14,6 +18,8 @@ class ImageGptPlugin extends GptPlugin {
 
   @override
   Future<void> init(execution, pluginConfiguration) async {
+    executionId = execution["id"];
+    imagePromptFile = execution["prompt"];
     imagesDir = "$reportDir/images/$blockId";
     createDirectoryIfNotExist(imagesDir);
     imageRequests = await createImageRequest(execution);
@@ -23,7 +29,8 @@ class ImageGptPlugin extends GptPlugin {
   Future<void> doExecution(results, dryRun) async {
     for (var i = 1; i <= imageRequests.length; i++) {
       final image = imageRequests[i - 1];
-      final response = await makeImageGenerationRequest(image, dryRun);
+      final response = await makeImageGenerationRequest(
+          image, executionId, imagePromptFile, dryRun);
       final result = {
         "prompt": image["prompt"],
         "size": image["size"],
@@ -55,7 +62,6 @@ class ImageGptPlugin extends GptPlugin {
   }
 
   Future<List<dynamic>> createImageRequest(execution) async {
-    final imagePromptFile = execution["prompt"];
     final promptTemplate = await io.readFileAsString(imagePromptFile);
     final templateProperties = execution["properties"];
     final prompt = createPrompt(promptTemplate, templateProperties);
@@ -104,8 +110,9 @@ class ImageGptPlugin extends GptPlugin {
   }
 
   Future<Map<String, dynamic>> makeImageGenerationRequest(
-      requestBody, dryRun) async {
-    return sendHttpPostRequest(requestBody, "v1/images/generations", dryRun);
+      requestBody, executionId, tag, dryRun) async {
+    return sendHttpPostRequest(
+        requestBody, "v1/images/generations", executionId, tag, dryRun);
   }
 
   Future<void> saveBase64AsPng(String base64String, String filePath) async {
