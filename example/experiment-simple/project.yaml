@@ -1,0 +1,21 @@
+---
+projectName: experiment-simple
+projectVersion: '1.1'
+apiKeyFile: "../../api_key"
+blocks:
+  - blockId: simple-1
+    pluginName: ExperimentGptPlugin
+    blockRuns: 5
+    configuration:
+      requestParams:
+        model: gpt-3.5-turbo
+        temperature: 1.2
+        top_p: 1
+        max_tokens: 500
+    executions:
+      - id: exp-1
+        systemMessageFile: "../system-message.txt"
+        promptChain:
+          - simple-story.prompt
+        properties:
+          character: Commander in Starfleet

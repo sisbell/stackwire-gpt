@@ -1,3 +1,8 @@
+## 0.7
+- Move blockRuns out of Configuration Node [#45](https://github.com/sisbell/stackwire-gpt/issues/45)
+- Use YAML for EOM files [#44](https://github.com/sisbell/stackwire-gpt/issues/44)
+- Get Experiment Input From Data File [#41](https://github.com/sisbell/stackwire-gpt/issues/41)
+- Output Metrics for All OpenAI Requests [#39](https://github.com/sisbell/stackwire-gpt/issues/39)
 ## 0.6
 - Add support for dryRun flag [#36](https://github.com/sisbell/stackwire-gpt/issues/36)
 - Command for returning number of OpenAI Calls [#35](https://github.com/sisbell/stackwire-gpt/issues/35)

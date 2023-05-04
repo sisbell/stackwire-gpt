@@ -9,7 +9,9 @@ class ExperimentGptPlugin extends GptPlugin {
 
   late bool fixJson;
 
-  late String metricsFile;
+  late Map<String, dynamic> importProperties;
+
+  late String executionId;
 
   late List<String> promptTemplates;
 
@@ -30,6 +32,7 @@ class ExperimentGptPlugin extends GptPlugin {
 
   @override
   Future<void> init(execution, pluginConfiguration) async {
+    executionId = execution["id"];
     requestParams = Map.from(pluginConfiguration["requestParams"]);
     chainRuns = execution['chainRuns'] ?? 1;
     fixJson = execution["fixJson"] ?? false;
@@ -42,9 +45,38 @@ class ExperimentGptPlugin extends GptPlugin {
         promptChain.map((e) async => await io.readFileAsString(e)).toList();
     promptTemplates = await Future.wait(futurePrompts);
     excludesMessageHistory = execution["excludesMessageHistory"] ?? [];
-    promptValues = Map.from(execution['properties'] ?? {});
+    final properties = execution['properties'] ?? {};
     responseFormat = execution['responseFormat'] ?? "text";
-    metricsFile = "$reportDir/metrics-$blockId.csv";
+    final import = execution["import"];
+    if (import != null) {
+      final propertiesFile = import["propertiesFile"] ?? "properties.json";
+      final data = await readJsonFile(propertiesFile);
+      final props = import["properties"];
+      final calculatedData = getFieldsForAllProperties(data, props);
+      promptValues = {...calculatedData, ...properties};
+    } else {
+      promptValues = Map.from(properties);
+    }
+  }
+
+  Map<String, String> getFieldAtIndex(Map<String, dynamic> data,
+      Map<String, dynamic> properties, String field) {
+    if (data.containsKey(field) && properties.containsKey(field)) {
+      int index = properties[field]! - 1;
+      if (index >= 0 && index < data[field]!.length) {
+        return {field: data[field]![index]};
+      }
+    }
+    return {};
+  }
+
+  Map<String, String> getFieldsForAllProperties(
+      Map<String, dynamic> data, Map<String, dynamic> properties) {
+    Map<String, String> result = {};
+    for (String key in properties.keys) {
+      result.addAll(getFieldAtIndex(data, properties, key));
+    }
+    return result;
   }
 
   @override
@@ -64,8 +96,9 @@ class ExperimentGptPlugin extends GptPlugin {
           messageHistory.addUserMessage(prompt);
           requestParams['messages'] = messageHistory.history;
         }
-        final responseBody =
-            await makeChatCompletionRequest(requestParams, dryRun);
+
+        final responseBody = await makeChatCompletionRequest(
+            requestParams, executionId, promptFileName, dryRun);
         if (dryRun) {
           continue;
         }
@@ -92,8 +125,6 @@ class ExperimentGptPlugin extends GptPlugin {
           results.add(createExperimentResult(
               "FAILURE", "Failure Parsing JSON Response"));
           rethrow;
-        } finally {
-          await writeMetrics(responseBody, promptFileName, metricsFile);
         }
         results.add(createAssistantHistory(
             content, responseBody, promptFileName, promptValues, chainRun));
@@ -133,32 +164,8 @@ class ExperimentGptPlugin extends GptPlugin {
   }
 
   Future<Map<String, dynamic>> makeChatCompletionRequest(
-      requestBody, dryRun) async {
-    return sendHttpPostRequest(requestBody, "v1/chat/completions", dryRun);
-  }
-
-  Future<void> writeMetrics(responseBody, promptFileName, filePath) async {
-    final responseId = responseBody["id"];
-    final usage = responseBody["usage"];
-    final promptTokens = usage['prompt_tokens'];
-    final completionTokens = usage['completion_tokens'];
-    final totalTokens = usage['total_tokens'];
-
-    final file = File(filePath);
-    bool exists = await file.exists();
-    if (!exists) {
-      await file.writeAsString(
-          "request_id, prompt_name, request_time, prompt_tokens, completion_tokens, total_tokens\n");
-    }
-    final sink = File(filePath).openWrite(mode: FileMode.append);
-    try {
-      final requestTime = responseBody['requestTime'];
-      sink.write(
-          "$responseId, $promptFileName, $requestTime, $promptTokens, $completionTokens, $totalTokens\n");
-    } catch (e) {
-      throw Exception('Error occurred while writing file: $e');
-    } finally {
-      sink.close();
-    }
+      requestBody, executionId, tag, dryRun) async {
+    return sendHttpPostRequest(
+        requestBody, "v1/chat/completions", executionId, tag, dryRun);
   }
 }

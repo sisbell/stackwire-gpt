@@ -8,6 +8,9 @@ Role: ${rank}
 Main Character Name: ${mainCharacterName}
 If no main character name is given, choose one based on role
 
+SHOW
+${show}
+
 CHARACTER ACTION
 ${characterAction}
 
