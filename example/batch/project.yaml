@@ -1,0 +1,36 @@
+---
+projectName: product-summary
+projectVersion: '2.8'
+apiKeyFile: "../../api_key"
+blocks:
+    # Shows how to create a batch block
+  - blockId: product-1
+    pluginName: BatchGptPlugin
+    blockRuns: 2
+    configuration:
+      requestParams:
+        model: gpt-3.5-turbo
+        temperature: 0.3
+        top_p: 1
+        max_tokens: 500
+    executions:
+      - id: batch-1
+        dataFile: product.json
+        prompt: product.prompt
+        systemMessageFile: "../system-message.txt"
+
+  - blockId: product-2
+    pluginName: BatchGptPlugin
+    configuration:
+      requestParams:
+        model: gpt-3.5-turbo
+        temperature: .2
+        top_p: .4
+        max_tokens: 200
+    executions:
+      - id: batch-2
+        dataFile: product.json
+        prompt: product.prompt
+      - id: batch-3
+        dataFile: product.json
+        prompt: product.prompt

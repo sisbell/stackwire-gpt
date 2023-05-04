@@ -1,0 +1,28 @@
+---
+projectName: image-generation
+projectVersion: '2.3'
+apiKeyFile: "../../api_key"
+blocks:
+  - blockId: image-1
+    pluginName: ImageGptPlugin
+    executions:
+      #First Image
+      - id: img-unicorn
+        sizes:
+          - 256
+        prompt: image.prompt
+        properties:
+          creature: Unicorn
+          feature: a gold horn and wings
+
+      # Second Image
+      - id: img-fish
+        sizes:
+          - 256
+          - 512
+        imageCount: 2
+        responseFormat: b64_json
+        prompt: image.prompt
+        properties:
+          creature: fish
+          feature: giant eyes

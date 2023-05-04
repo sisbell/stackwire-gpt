@@ -56,7 +56,7 @@ abstract class GptPlugin {
   Future<num> apiCallCountForBlock() async {
     num result = 0;
     final pluginConfiguration = block["configuration"];
-    final blockRuns = pluginConfiguration["blockRuns"] ?? 1;
+    final blockRuns = block["blockRuns"] ?? 1;
     for (var blockRun = 1; blockRun <= blockRuns; blockRun++) {
       final executions = block["executions"];
       for (var i = 0; i < executions.length; i++) {
@@ -73,7 +73,7 @@ abstract class GptPlugin {
     print("BlockId: $blockId, PluginName: $pluginName");
     final startTime = DateTime.now();
     final pluginConfiguration = block["configuration"];
-    blockRuns = pluginConfiguration["blockRuns"] ?? 1;
+    blockRuns = block["blockRuns"] ?? 1;
     createDirectoryIfNotExist(blockDataDir);
     final blockResults = [];
     for (var blockRun = 1; blockRun <= blockRuns; blockRun++) {
@@ -172,6 +172,7 @@ abstract class GptPlugin {
       } else {
         print(
             '\t\tOpenAI Request failed with status code: ${response.statusCode}');
+        print(requestBodyStr);
         logFailedRequest(requestBodyStr);
         return {"errorCode": response.statusCode};
       }

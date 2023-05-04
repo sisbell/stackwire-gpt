@@ -5,6 +5,7 @@ import 'dart:mirrors';
 import 'package:args/command_runner.dart';
 import 'package:gpt/src/gpt_plugin.dart';
 import 'package:gpt/src/io/native_io.dart';
+import 'package:yaml/yaml.dart';
 
 final io = NativeIO();
 
@@ -25,7 +26,6 @@ class ApiCountCommand extends ProjectInitializeCommand {
   String get name => "count";
 
   ApiCountCommand() {
-    argParser.addOption('projectFile', abbr: 'p');
     argParser.addOption('blockId', abbr: 'b');
   }
 
@@ -70,9 +70,7 @@ class CleanCommand extends ProjectInitializeCommand {
   @override
   String get name => "clean";
 
-  CleanCommand() {
-    argParser.addOption('projectFile', abbr: 'p');
-  }
+  CleanCommand() {}
 
   @override
   Future<void> run() async {
@@ -90,13 +88,12 @@ class CleanCommand extends ProjectInitializeCommand {
 
 class RunCommand extends ProjectInitializeCommand {
   @override
-  String get description => "Runs a plugin";
+  String get description => "Runs a project's blocks";
 
   @override
   String get name => "run";
 
   RunCommand() {
-    argParser.addOption('projectFile', abbr: 'p');
     argParser.addOption('blockId', abbr: 'b');
     argParser.addFlag("dryRun", defaultsTo: false);
   }
@@ -147,7 +144,7 @@ GptPlugin getPlugin(block, projectConfig) {
 abstract class ProjectInitializeCommand extends Command {
   late String outputDirName;
 
-  late Map<String, dynamic> project;
+  late Map project;
 
   late Map<String, dynamic> projectConfig;
 
@@ -157,8 +154,8 @@ abstract class ProjectInitializeCommand extends Command {
 
   @override
   Future<void> run() async {
-    String projectFile = argResults?['projectFile'] ?? 'project.eom';
-    project = await readJsonFile(projectFile);
+    String projectFile = 'project.yaml';
+    project = await readYamlFile(projectFile);
     final apiKeyFile = project['apiKeyFile'] ?? "api_key";
     final apiKey = await io.readFileAsString(apiKeyFile);
     outputDirName = project['outputDir'] ?? "output";
@@ -182,5 +179,11 @@ abstract class ProjectInitializeCommand extends Command {
   Future<Map<String, dynamic>> readJsonFile(String filePath) async {
     String jsonString = await io.readFileAsString(filePath);
     return jsonDecode(jsonString);
+  }
+
+  Future<Map<String, dynamic>> readYamlFile(String filePath) async {
+    String text = await io.readFileAsString(filePath);
+    final yamlObject = loadYaml(text);
+    return jsonDecode(json.encode(yamlObject));
   }
 }

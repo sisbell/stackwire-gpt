@@ -49,8 +49,8 @@ class ExperimentGptPlugin extends GptPlugin {
     metricsFile = "$reportDir/metrics-$blockId.csv";
     final import = execution["import"];
     if (import != null) {
-      final dataFile = import["dataFile"] ?? "data.json";
-      final data = await readJsonFile(dataFile);
+      final propertiesFile = import["propertiesFile"] ?? "properties.json";
+      final data = await readJsonFile(propertiesFile);
       final props = import["properties"];
       final calculatedData = getFieldsForAllProperties(data, props);
       promptValues = {...calculatedData, ...properties};

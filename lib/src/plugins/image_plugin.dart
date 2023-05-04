@@ -29,6 +29,7 @@ class ImageGptPlugin extends GptPlugin {
         "size": image["size"],
         "images": response["data"]
       };
+      print(response);
       results.add(result);
     }
   }
@@ -58,8 +59,8 @@ class ImageGptPlugin extends GptPlugin {
     final promptTemplate = await io.readFileAsString(imagePromptFile);
     final templateProperties = execution["properties"];
     final prompt = createPrompt(promptTemplate, templateProperties);
-    final responseFormat = execution["responseFormat"];
-    final imageCount = execution["imageCount"];
+    final responseFormat = execution["responseFormat"] ?? "url";
+    final imageCount = execution["imageCount"] ?? 1;
     final sizes = execution["sizes"];
     final imageRequests = [];
     for (int size in sizes) {

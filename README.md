@@ -32,27 +32,22 @@ The following are the use cases supported
 * [Chain Experiment with Multiple Prompts](#chain-experiment-with-multiple-prompts)
 
 ### General Information
-#### Experiment Object Model
-The experiment object model (or eom) is the project file for running commands. The skeleton structure is given below.
+#### Project File Format
+The project file skeleton structure is given below. Name your project file _project.yaml._ If you need multiple
+project files, also use multiple directories.
 
-```json
-{
-  "projectName": "your-project-name",
-  "projectVersion": "1.0",
-  "apiKeyFile": "../../api_key",
-  "blocks": [
-    {
-      "blockId": "blockId-A",
-      "pluginName": "MyGptPlugin",
-      "configuration": {
-        
-      },
-      "executions": [
-      
-      ]
-    }
-  ]
-}
+```yaml
+---
+projectName: your-project-name
+projectVersion: '1.0'
+apiKeyFile: "../../api_key"
+blocks:
+  - blockId: blockId-A
+    pluginName: MyGptPlugin
+    configuration: {}
+    executions: []
+
+
 ```
 
 | Field                    | Description                                                                                                                         |
@@ -64,6 +59,7 @@ The experiment object model (or eom) is the project file for running commands. T
 | blocks                   | an array of executable blocks. A block is equivalent to a plugin with execution actions.                                            | 
 | blocks.[n].blockId       | unique id of a block.                                                                                                               | 
 | blocks.[n].pluginName    | name of the plugin. This will match to a dart class that implements the block.                                                      | 
+| blocks.[n].blockRuns     | number of times to run this block. Default value is 1.                                                                              |
 | blocks.[n].configuration | configuration for the block. This is a common configuration for all executions of the plugin. This will change based on the plugin. |   
 | blocks.[n].executions    | an array of execution details. This is used to provide command parameters to the plugin.                                            | 
 
@@ -103,28 +99,24 @@ The experiment object model (or eom) is the project file for running commands. T
 #### CLI
 To run a specific block, use the _blockId_ arg.
 
-> air run -p project.eom -b blockId-A
+> air run -b blockId-A
 
 If you want to run all blocks, don't specify a blockId. This also works if there is only one block.
-
-> air run -p project.eom
-
-If your eom file name is _project.eom_, then simply type then following to run all blocks.
 
 > air run
 
 The commands for run are given below
 ```
-Runs a plugin
+Runs a project's blocks
 
 Usage: air run [arguments]
 -h, --help           Print this usage information.
--p, --projectFile    
 -b, --blockId        
     --[no-]dryRun    
 
 Run "air help" to see global options.
 ```
+
 ### Generate Images
 First, create a prompt file for images. Call it **image.prompt**.
 ```
@@ -134,63 +126,49 @@ The _${}_ is a value that can be substituted with a property. You don't have to 
 in the prompt but they can be convenient if you want to vary the prompt without needing
 to create a separate file each time.
 
-Now create an eom file **project-image.eom**. 
+Now create a project file **project.yaml**. 
 
-```json
-{
-  "projectName": "image-generation",
-  "projectVersion": "2.3",
-  "apiKeyFile": "../../api_key",
-  "blocks": [
-    {
-      "blockId": "image-1",
-      "pluginName": "ImageGptPlugin",
-      "configuration": {
-        "blockRuns": 2
-      },
-      "executions": [
-        {
-          "id": "img-unicorn",
-          "sizes": [
-            256
-          ],
-          "imageCount": 1,
-          "responseFormat": "url",
-          "prompt": "image.prompt",
-          "properties": {
-            "creature": "Unicorn",
-            "feature": "a gold horn and wings"
-          }
-        },
-        {
-          "id": "img-fish",
-          "sizes": [
-            256,
-            512
-          ],
-          "imageCount": 2,
-          "responseFormat": "b64_json",
-          "prompt": "image.prompt",
-          "properties": {
-            "creature": "fish",
-            "feature": "giant eyes"
-          }
-        }
-      ]
-    }
-  ]
-}
+```yaml
+---
+projectName: image-generation
+projectVersion: '2.3'
+apiKeyFile: "../../api_key"
+blocks:
+  - blockId: image-1
+    pluginName: ImageGptPlugin
+    executions:
+      #First Image
+      - id: img-unicorn
+        sizes:
+          - 256
+        prompt: image.prompt
+        properties:
+          creature: Unicorn
+          feature: a gold horn and wings
+
+      # Second Image
+      - id: img-fish
+        sizes:
+          - 256
+          - 512
+        imageCount: 2
+        responseFormat: b64_json
+        prompt: image.prompt
+        properties:
+          creature: fish
+          feature: giant eyes
+
 ```
 
-The eom above uses the **ImageGptPlugin**. The configuration is:
+The project file above uses the **ImageGptPlugin**. The configuration is:
 
-| Field          | Description                                                                                             |
-|----------------|---------------------------------------------------------------------------------------------------------|
-| sizes          | sizes of images to create: 256, 512, and 1024                                                           |
-| imageCount     | number of images to generate.                                                                           |  
-| responseFormat | url or b64_json. Url points to a remote location for the images, while b64_json is embedded in the output field |  
-| prompt         | prompt file to use for generating the image                                                             |  
-| properties     | properties to substitute into the prompt                                                                |  
+| Field          | Description                                                                                                                                       |
+|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| sizes          | sizes of images to create: 256, 512, and 1024                                                                                                     |
+| imageCount     | number of images to generate. Optional, default value is 1.                                                                                       |  
+| responseFormat | url or b64_json. Optional, default value is 'url'. Url points to a remote location for the images, while b64_json is embedded in the output field |  
+| prompt         | prompt file to use for generating the image                                                                                                       |  
+| properties     | properties to substitute into the prompt                                                                                                          |  
 
 Note: the total images generated is:
 > sizes.length * imageCount
@@ -269,16 +247,12 @@ ${output}/${projectName}/${projectVersion}/${blockId}/images
 ![image](https://user-images.githubusercontent.com/64116/235335782-ce438b16-45eb-4413-a12f-ca33136a63b2.png)
 
 #### CLI
-To generate the unicorn image, use the following command
+Generate all images with
 
-> air run -p project-image.eom -b img-unicorn
+> air run
 
-Or generate all images with
-
-> air run -p project-image.eom
-> 
 ### Batch Command
-Batches are useful when you have a number prompts that you want to generate output for.
+Batches are useful when you have a number of prompts that you want to generate output for.
 
 First create a prompt file. Borrowing an example prompt from DeepLearning.AI, create a prompt file. 
 Name the file whatever you like. In our case, it's **product.prompt**.
@@ -295,7 +269,7 @@ that are relevant to the price and perceived value.
 
 Review: ```${prod_review}```
 ```
-Next create a data file called **data.json**. This file contains your batch inputs.
+Next create a data file called **product.json**. This file contains your batch inputs.
 
 Note how ${prod_review} in the prompt file matches the name of _prod_review_ key in the data file. This is how the tool does the substitution for creating 
 the calculated prompt. You can configure multiple variables in the prompt and data file. 
@@ -304,7 +278,7 @@ the calculated prompt. You can configure multiple variables in the prompt and da
 {
   "prod_review" : [
     "Got this panda plush toy for my daughter's birthday, who loves it and takes it everywhere. It's soft and  super cute, and its face has a friendly look...",
-    "Needed a nice lamp for my bedroom, and this one had additional storage and not too high of a price point. Got it fast - arrived in 2 days. The string to..",
+    "Needed a nice lamp for my bedroom, and this one had additional storage and not too high of a price point. Got it fast - arrived in 2 days. The string to.."
    ]
 }
 ```
@@ -314,7 +288,7 @@ You could also include another set of inputs to your prompt. Note that the size 
 {
   "prod_review" : [
     "Got this panda plush toy for my daughter's birthday, who loves it and takes it everywhere. It's soft and  super cute, and its face has a friendly look...",
-    "Needed a nice lamp for my bedroom, and this one had additional storage and not too high of a price point. Got it fast - arrived in 2 days. The string to..",
+    "Needed a nice lamp for my bedroom, and this one had additional storage and not too high of a price point. Got it fast - arrived in 2 days. The string to.."
    ],
   "some_action" : [
     "Expand this statement",
@@ -334,74 +308,54 @@ The second prompt would be
 ```
 Reduce this statement: Needed a nice lamp for my bedroom, and this one had additional storage and not too high of a price point. Got it fast - arrived in 2 days. The string to..
 ```
-To continue the example, create a project file called **product.eom**. Note that the prompt and data file point to the files we previously created. 
+To continue the example, create a project file called **product.yaml**. Note that the prompt and data file point to the files we previously created. 
 You may include more than one batch object in the array.
-```json
-{
-  "projectName": "product-summary",
-  "projectVersion": "2.8",
-  "apiKeyFile": "../../api_key",
-  "blocks": [
-    {
-      "blockId": "product-1",
-      "pluginName": "BatchGptPlugin",
-      "configuration": {
-        "blockRuns": 2,
-        "requestParams": {
-          "model": "gpt-3.5-turbo",
-          "temperature": 0.3,
-          "top_p": 1,
-          "max_tokens": 500
-        }
-      },
-      "executions": [
-        {
-          "dataFile": "data.json",
-          "prompt": "product.prompt",
-          "systemMessageFile": "../system-message.txt"
-        },
-        {
-          "dataFile": "data.json",
-          "prompt": "product.prompt",
-          "systemMessageFile": "../system-message.txt"
-        }
-      ]
-    },
-    {
-      "blockId": "product-2",
-      "pluginName": "BatchGptPlugin",
-      "configuration": {
-        "blockRuns": 1,
-        "requestParams": {
-          "model": "gpt-3.5-turbo",
-          "temperature": 1,
-          "top_p": 1,
-          "max_tokens": 500
-        }
-      },
-      "executions": [
-        {
-          "dataFile": "data.json",
-          "prompt": "product.prompt"
-        },
-        {
-          "dataFile": "data.json",
-          "prompt": "product.prompt"
-        }
-      ]
-    }
-  ]
-}
+```yaml
+---
+projectName: product-summary
+projectVersion: '2.8'
+apiKeyFile: "../../api_key"
+blocks:
+  # Shows how to create a batch block
+  - blockId: product-1
+    pluginName: BatchGptPlugin
+    blockRuns: 2
+    configuration:
+      requestParams:
+        model: gpt-3.5-turbo
+        temperature: 0.3
+        top_p: 1
+        max_tokens: 500
+    executions:
+      - id: batch-1
+        dataFile: product.json
+        prompt: product.prompt
+        systemMessageFile: "../system-message.txt"
+
+  - blockId: product-2
+    pluginName: BatchGptPlugin
+    configuration:
+      requestParams:
+        model: gpt-3.5-turbo
+        temperature: .2
+        top_p: .4
+        max_tokens: 200
+    executions:
+      - id: batch-2
+        dataFile: product.json
+        prompt: product.prompt
+      - id: batch-3
+        dataFile: product.json
+        prompt: product.prompt
+
 ```
 
 | Field                       | Description                                                                                                          |
 |-----------------------------|----------------------------------------------------------------------------------------------------------------------|
 | configuration.requestParams | configuration parameters that are sent to OpenAI. You may add any legal parameters that OpenAI uses. Required field. |
-| configuration.blockRuns     | number of times to run your block. This will be the number of times you call OpenAI API. Default value is 1.         |
 | executions[n].dataFile      | path of your data file. This is the input into the prompt. Required field.                                           |
 | executions[n].id            | unique id of the batch job. Required field.                                                                          |
 | executions[n].prompt        | path of your prompt template file. Required field.                                                                   |
-
 
 #### Output
 The output looks something like below. I've truncated the actual results to improve readability.
@@ -446,7 +400,7 @@ The output looks something like below. I've truncated the actual results to impr
 #### CLI
 To run the batch command with _blockId_ product-1
 
-> air run -p product.eom -b product-1
+> air run -b product-1
 
 The number of calls to OpenAI will be
 
@@ -463,7 +417,6 @@ The following fields are for a block in an experiment plugin. Use this is as a r
 | Field                           | Description                                                                                                                                                                                   |
 |---------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | configuration.requestParams     | the request parameters that are sent to OpenAI. You may add any legal parameters that OpenAI uses. Required field.                                                                            |
-| configuration.blockRuns         | the number of times to run your block. This will be the number of times you call OpenAI API. Default value is 1.                                                                              |
 | configuration.responseFormat    | either "json" or "text". The default value is "text" if not specified                                                                                                                         |
 | executions[n].id                | unique id of the experiment. Currently optional but this may change in future releases.                                                                                                       |
 | executions[n].promptChain       | the path of your prompt template files. Required field. Must contain at least one element.                                                                                                    |
@@ -484,42 +437,30 @@ Start by creating a **simple-story.prompt** file.
 ```
 Write me a story about ${character}. One Sentence Only.
 ```
-Now create the project file called **project-simple.eom** with an eom extension (experiment object model).
+Now create the project file called **project.yaml**.
 
-```json
-{
-  "projectName": "experiment-simple",
-  "projectVersion": "1.1",
-  "apiKeyFile": "../../api_key",
-  "blocks": [
-    {
-      "blockId": "simple-1",
-      "pluginName": "ExperimentGptPlugin",
-      "configuration": {
-        "blockRuns": 5,
-        "requestParams": {
-          "model": "gpt-3.5-turbo",
-          "temperature": 1.2,
-          "top_p": 1,
-          "max_tokens": 500
-        }
-      },
-      "executions": [
-        {
-          "id": "exp-1",
-          "systemMessageFile": "../system-message.txt",
-          "responseFormat" : "text",
-          "promptChain": [
-            "simple-story.prompt"
-          ],
-          "properties": {
-            "character": "Commander in Starfleet"
-          }
-        }
-      ]
-    }
-  ]
-}
+```yaml
+---
+projectName: experiment-simple
+projectVersion: '1.1'
+apiKeyFile: "../../api_key"
+blocks:
+  - blockId: simple-1
+    pluginName: ExperimentGptPlugin
+    blockRuns: 5
+    configuration:
+      requestParams:
+        model: gpt-3.5-turbo
+        temperature: 1.2
+        top_p: 1
+        max_tokens: 500
+    executions:
+      - id: exp-1
+        systemMessageFile: "../system-message.txt"
+        promptChain:
+          - simple-story.prompt
+        properties:
+          character: Commander in Starfleet
 ```
 
 The _${character}_ value under the executions properties is substituted into the prompt. 
@@ -570,11 +511,10 @@ This will be useful in calculating the cost of your requests.
 }
 ```
 
-
 #### CLI
 To run the experiment command. 
 
-> air run -p project-simple.eom
+> air run
 
 This runs with _simple-story.prompt_ 5 times.
 
@@ -590,45 +530,33 @@ Write me a story about ${character}. The main character is ${mainCharacterName}.
 The response should be in JSON using the following structure. Only use these fields. {"mainCharacterName": "", "story": ""}
 ```
 
-Now create the eom project file: **project-single.eom**. Note that we are defining the _character_ value as "Commander in Starfleet"
+Now create the project file: **project.yaml**. Note that we are defining the _character_ value as "Commander in Starfleet"
 but are not defining any _mainCharacterName_. We will let the AI do this for us.
 
-```json
-{
-  "projectName": "experiment-chain-single",
-  "projectVersion": "1.1",
-  "apiKeyFile": "../../api_key",
-  "blocks": [
-    {
-      "blockId": "single-1",
-      "pluginName": "ExperimentGptPlugin",
-      "configuration": {
-        "blockRuns": 1,
-        "requestParams": {
-          "model": "gpt-3.5-turbo",
-          "temperature": 1.2,
-          "top_p": 1,
-          "max_tokens": 500
-        }
-      },
-      "executions": [
-        {
-          "id": "exp-1",
-          "systemMessageFile": "../system-message.txt",
-          "responseFormat" : "json",
-          "chainRuns": 1,
-          "promptChain": [
-            "simple-story.prompt"
-          ],
-          "properties": {
-            "character": "Commander in Starfleet",
-            "mainCharacterName": ""
-          }
-        }
-      ]
-    }
-  ]
-}
+```yaml
+---
+projectName: experiment-chain-single
+projectVersion: '1.1'
+apiKeyFile: "../../api_key"
+blocks:
+  - blockId: single-1
+    pluginName: ExperimentGptPlugin
+    configuration:
+      requestParams:
+        model: gpt-3.5-turbo
+        temperature: 1.2
+        top_p: 1
+        max_tokens: 500
+    executions:
+      - id: exp-1
+        systemMessageFile: "../system-message.txt"
+        responseFormat: json
+        promptChain:
+          - simple-story.prompt
+        properties:
+          character: Commander in Starfleet
+          mainCharacterName: ''
+
 ```
 Since we are chaining requests on the single prompt, it's important to set the _response_format_ field to "json".
 This is how the response knows how to map itself to the properties in the next request.
@@ -640,7 +568,7 @@ the AI may add in addition to the JSON response. For example, the following case
 
 To run the experiment command
 
-> air run -p project-single.eom -b exp-1
+> air run -b exp-1
 
 On the first (chain) request, the prompt sent to OpenAI will be
 ```
@@ -709,51 +637,69 @@ ${story}
 The response must be in JSON using the following structure. Only use these fields. {"characterAction": ""}
 ```
 
-Now create an eom project file called **project-chain.eom**
+Now create an project file called **project.yaml**
 
-```json
-{
-  "projectName": "experiment-chain-multiple",
-  "projectVersion": "1.4",
-  "apiKeyFile": "../../api_key",
-  "blocks": [
-    {
-      "blockId": "chain-1",
-      "pluginName": "ExperimentGptPlugin",
-      "configuration": {
-        "blockRuns": 1,
-        "requestParams": {
-          "model": "gpt-3.5-turbo",
-          "temperature": 1.2,
-          "top_p": 1,
-          "max_tokens": 500
-        }
-      },
-      "executions": [
-        {
-          "id": "exp-1",
-          "responseFormat" : "json",
-          "chainRuns": 2,
-          "promptChain": [
-            "structured-story.prompt",
-            "character-action.prompt"
-          ],
-          "excludesMessageHistory": [
-            "character-action.prompt"
-          ],
-          "fixJson": true,
-          "properties": {
-            "rank": "Commander in Starfleet",
-            "show": "The Original Star Trek",
-            "mainCharacterName": "",
-            "story": "",
-            "characterAction": ""
-          }
-        }
-      ]
-    }
-  ]
-}
+```yaml
+---
+projectName: experiment-chain-multiple
+projectVersion: '1.4'
+apiKeyFile: "../../api_key"
+blocks:
+  - blockId: chain-1
+    pluginName: ExperimentGptPlugin
+    configuration:
+      requestParams:
+        model: gpt-3.5-turbo
+        temperature: 1.2
+        top_p: 1
+        max_tokens: 500
+    executions:
+      - id: exp-1
+        chainRuns: 2
+        promptChain:
+          - structured-story.prompt
+          - character-action.prompt
+        excludesMessageHistory:
+          - character-action.prompt
+        fixJson: true
+        responseFormat: json
+        properties:
+          rank: Commander in Starfleet
+          show: Star Trek
+          mainCharacterName: ''
+          story: ''
+          characterAction: ''
+
+  # Block demonstrates the use of importing properties
+  - blockId: chain-2
+    pluginName: ExperimentGptPlugin
+    configuration:
+      requestParams:
+        model: gpt-3.5-turbo
+        temperature: 1.2
+        top_p: 1
+        max_tokens: 500
+    executions:
+      - id: exp-1
+        chainRuns: 2
+        promptChain:
+          - structured-story.prompt
+          - character-action.prompt
+        excludesMessageHistory:
+          - character-action.prompt
+        fixJson: true
+        responseFormat: json
+        properties:
+          rank: Commander in Starfleet
+          mainCharacterName: ''
+          story: ''
+          characterAction: ''
+        # Import properties from a properties file
+        import:
+          propertiesFile: properties.json
+          properties:
+            rank: 3
+            show: 2
 ```
 In the project file above, notice that we have added both prompts to the chain. Since
 the chain runs 2 times, it will run the prompts in the following order
@@ -765,8 +711,6 @@ the chain runs 2 times, it will run the prompts in the following order
 We also have the **character-action.prompt** excluded from the message history. What this
 means is that this prompt and its result will not be part of the main chat context. It's a one-shot.
 This will be clearer in the explanation below.
-
-
 
 The **first** request will look like
 
@@ -789,7 +733,7 @@ RESPONSE
 The response must only be in JSON using the following structure. 
 Only use these fields. {"mainCharacterName": "", "story": ""}
 ```
-Since only the character property was given in the eom, it's the only one that is non-blank in the prompt.
+Since only the character property was given in the project file, it's the only one that is non-blank in the prompt.
 
 The following is an example of a response. The Klingons are threatening the Federation.
 ```
@@ -855,7 +799,7 @@ This example shows how we can use chaining to simulate user input in a chain.
 #### CLI
 To run the experiment
 
-> air run -p project-chain.eom -b exp-1
+> air run -b exp-1
 > 
 ### Experiment Output Files
 
@@ -938,7 +882,7 @@ Global options:
 Available commands:
   clean   Cleans project's output directory
   count   Returns the number of OpenApiCalls that would be made
-  run     Runs a plugin
+  run     Runs a project's blocks
 
 Run "air help <command>" for more information about a command.
 ```
@@ -946,7 +890,7 @@ Run "air help <command>" for more information about a command.
 ### Clean Project
 To clean a project, run the following
 
-> air clean -p myproject
+> air clean
 
 This deletes the _output_ directory for the project.
 
@@ -954,11 +898,12 @@ This deletes the _output_ directory for the project.
 Running OpenAI calls with a tool can be costly if you mis-configure it. 
 To determine how many OpenAI calls a project will create, run the following command
 
-> air count -p myproject
+> air count
 
 or for the count of a specific block
 
-> air count -p myproject -b myblockId
+> air count -b myblockId
+
 It will output 
 
 ```
@@ -969,7 +914,7 @@ Total OpenAPI Calls would be 12
 ### DryRun
 If you want to know that your project is doing before incurring costs to OpenAI, use the dryRun flag.
 
->  air run -p project-image.eom --dryRun
+>  air run --dryRun
 
 ```
 Executing Block
