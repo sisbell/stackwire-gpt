@@ -18,7 +18,7 @@
       "executions": [
         {
           "id": "exp-1",
-          "responseFormat" : "json",
+          "responseFormat": "json",
           "chainRuns": 2,
           "promptChain": [
             "structured-story.prompt",
@@ -30,10 +30,51 @@
           "fixJson": true,
           "properties": {
             "rank": "Commander in Starfleet",
-            "show": "The Original Star Trek",
+            "show" : "Star Trek",
             "mainCharacterName": "",
             "story": "",
             "characterAction": ""
+          }
+        }
+      ]
+    },
+    {
+      "blockId": "chain-2",
+      "pluginName": "ExperimentGptPlugin",
+      "configuration": {
+        "blockRuns": 1,
+        "requestParams": {
+          "model": "gpt-3.5-turbo",
+          "temperature": 1.2,
+          "top_p": 1,
+          "max_tokens": 500
+        }
+      },
+      "executions": [
+        {
+          "id": "exp-1",
+          "responseFormat": "json",
+          "chainRuns": 2,
+          "promptChain": [
+            "structured-story.prompt",
+            "character-action.prompt"
+          ],
+          "excludesMessageHistory": [
+            "character-action.prompt"
+          ],
+          "fixJson": true,
+          "properties": {
+            "rank": "Commander in Starfleet",
+            "mainCharacterName": "",
+            "story": "",
+            "characterAction": ""
+          },
+          "import" : {
+            "data_file" : "data.json",
+            "properties": {
+              "rank" : 3,
+              "show" : 2
+            }
           }
         }
       ]

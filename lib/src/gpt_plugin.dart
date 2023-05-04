@@ -186,6 +186,11 @@ abstract class GptPlugin {
     return {};
   }
 
+  Future<Map<String, dynamic>> readJsonFile(String filePath) async {
+    String jsonString = await io.readFileAsString(filePath);
+    return jsonDecode(jsonString);
+  }
+
   Future<String> readResponse(HttpClientResponse response) async {
     return response.transform(utf8.decoder).join();
   }

@@ -9,6 +9,8 @@ class ExperimentGptPlugin extends GptPlugin {
 
   late bool fixJson;
 
+  late Map<String, dynamic> importProperties;
+
   late String metricsFile;
 
   late List<String> promptTemplates;
@@ -42,9 +44,39 @@ class ExperimentGptPlugin extends GptPlugin {
         promptChain.map((e) async => await io.readFileAsString(e)).toList();
     promptTemplates = await Future.wait(futurePrompts);
     excludesMessageHistory = execution["excludesMessageHistory"] ?? [];
-    promptValues = Map.from(execution['properties'] ?? {});
+    final properties = execution['properties'] ?? {};
     responseFormat = execution['responseFormat'] ?? "text";
     metricsFile = "$reportDir/metrics-$blockId.csv";
+    final import = execution["import"];
+    if (import != null) {
+      final dataFile = import["dataFile"] ?? "data.json";
+      final data = await readJsonFile(dataFile);
+      final props = import["properties"];
+      final calculatedData = getFieldsForAllProperties(data, props);
+      promptValues = {...calculatedData, ...properties};
+    } else {
+      promptValues = Map.from(properties);
+    }
+  }
+
+  Map<String, String> getFieldAtIndex(Map<String, dynamic> data,
+      Map<String, dynamic> properties, String field) {
+    if (data.containsKey(field) && properties.containsKey(field)) {
+      int index = properties[field]! - 1;
+      if (index >= 0 && index < data[field]!.length) {
+        return {field: data[field]![index]};
+      }
+    }
+    return {};
+  }
+
+  Map<String, String> getFieldsForAllProperties(
+      Map<String, dynamic> data, Map<String, dynamic> properties) {
+    Map<String, String> result = {};
+    for (String key in properties.keys) {
+      result.addAll(getFieldAtIndex(data, properties, key));
+    }
+    return result;
   }
 
   @override

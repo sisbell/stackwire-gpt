@@ -58,11 +58,6 @@ class BatchGptPlugin extends GptPlugin {
     return sendHttpPostRequest(requestBody, "v1/chat/completions", dryRun);
   }
 
-  Future<Map<String, dynamic>> readJsonFile(String filePath) async {
-    String jsonString = await io.readFileAsString(filePath);
-    return jsonDecode(jsonString);
-  }
-
   Map<String, String> buildObject(inputMap, int index) {
     Map<String, String> result = {};
 
