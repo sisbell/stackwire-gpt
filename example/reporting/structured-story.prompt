@@ -1,0 +1,20 @@
+The response will be in JSON Format.
+
+PREVIOUS SCENE
+${story}
+
+CHARACTER
+Role: ${rank}
+Main Character Name: ${mainCharacterName}
+If no main character name is given, choose one based on role
+
+SHOW
+${show}
+
+CHARACTER ACTION
+${characterAction}
+
+Write me a story based on the character role. If character name, action and the previous scene are given also use those. Be very descriptive. Write two sentences only.
+
+RESPONSE
+The response must only be in JSON using the following structure. Only use these fields. {"mainCharacterName": "", "story": ""}
