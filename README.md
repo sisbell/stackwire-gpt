@@ -30,6 +30,7 @@ The following are the use cases supported
 * [Simple Experiment](#simple-experiment)
 * [Chain Experiment with Single Prompt](#chain-experiment-with-single-prompt)
 * [Chain Experiment with Multiple Prompts](#chain-experiment-with-multiple-prompts)
+* [Generating Reports](#generating-reports)
 
 ### General Information
 #### Project File Format
@@ -424,7 +425,6 @@ The following fields are for a block in an experiment plugin. Use this is as a r
 | executions[n].chainRuns         | the number of times to run the chain of defaults. Default value is 1                                                                                                                          |
 | executions[n].systemMessageFile | file containing the system message to use. Optional field.                                                                                                                                    |
 | executions[n].fixJson           | if your response is in JSON format, this will flag the tool to try to extract a valid JSON that is surrounded by unwanted external text that the AI may generate. The default value is false. |
-
 
 ### Simple Experiment
 
@@ -856,6 +856,55 @@ chatcmpl-774QWC735h8zqC48NdDvQBbAK4wtI, character-action.prompt, 2361, 91, 30, 1
 chatcmpl-774QYzgnx9x3UjxPjd4ef4lotUPI1, structured-story.prompt, 5668, 190, 72, 262
 chatcmpl-774QelDpcSp02xIJSH2kpdj1WyNsJ, character-action.prompt, 2057, 111, 23, 134
 ```
+
+## Generating Reports
+To generate an HTML report, add the _ReportingGptPlugin_ as the last block. Under the blockIds
+add any previous block id that you want to add to the generated report.
+
+```yaml
+---
+projectName: experiment-reporting
+projectVersion: '1.7'
+apiKeyFile: "../../api_key"
+blocks:
+  - blockId: chain-1
+    pluginName: ExperimentGptPlugin
+    blockRuns: 1
+    configuration:
+      requestParams:
+        model: gpt-3.5-turbo
+        temperature: 1.2
+        top_p: 1
+        max_tokens: 500
+    executions:
+      - id: exp-1
+        chainRuns: 2
+        promptChain:
+          - structured-story.prompt
+          - character-action.prompt
+        excludesMessageHistory:
+          - character-action.prompt
+        fixJson: true
+        responseFormat: json
+        properties:
+          rank: Commander in Starfleet
+          show: Star Trek
+          mainCharacterName: ''
+          story: ''
+          characterAction: ''
+    # Generate HTML Report
+  - blockId: report-1
+    pluginName: ReportingGptPlugin
+    executions:
+      - id: report-execution
+        blockIds:
+          - chain-1
+```
+#### Sample Report
+The report will display the entire chat for the configured block executions.
+
+<img width="1527" alt="report" src="https://user-images.githubusercontent.com/64116/236595603-aa37df83-0bd5-4997-b67a-e4357b912b6e.png">
+
 
 ## Install Program
 Make sure your have dart installed. Follow the instructions, in the link below.

@@ -1,3 +1,5 @@
+## 0.8.0
+- Reporting Plugin for HTML Output [#48](https://github.com/sisbell/stackwire-gpt/issues/48)
 ## 0.7.0
 - Move blockRuns out of Configuration Node [#45](https://github.com/sisbell/stackwire-gpt/issues/45)
 - Use YAML for EOM files [#44](https://github.com/sisbell/stackwire-gpt/issues/44)

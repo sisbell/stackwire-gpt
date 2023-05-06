@@ -1,10 +1,11 @@
 ---
 projectName: experiment-chain-multiple
-projectVersion: '1.4'
+projectVersion: '1.7'
 apiKeyFile: "../../api_key"
 blocks:
   - blockId: chain-1
     pluginName: ExperimentGptPlugin
+    blockRuns: 2
     configuration:
       requestParams:
         model: gpt-3.5-turbo
@@ -28,7 +29,7 @@ blocks:
           story: ''
           characterAction: ''
 
-# Block demonstrates the use of importing properties
+  # Block demonstrates the use of importing properties
   - blockId: chain-2
     pluginName: ExperimentGptPlugin
     configuration:
@@ -58,3 +59,11 @@ blocks:
           properties:
             rank: 3
             show: 2
+
+  - blockId: report-1
+    pluginName: ReportingGptPlugin
+    executions:
+      - id: report-1
+        blockIds:
+          - chain-1
+          - chain-2

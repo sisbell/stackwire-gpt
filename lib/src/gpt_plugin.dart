@@ -11,8 +11,12 @@ import 'io/io.dart';
 import 'prompts.dart';
 
 part "plugins/batch_plugin.dart";
+
 part "plugins/experiment_plugin.dart";
+
 part "plugins/image_plugin.dart";
+
+part "plugins/reporting_plugin.dart";
 
 abstract class GptPlugin {
   IO io;
@@ -80,7 +84,6 @@ abstract class GptPlugin {
       currentBlockRun = blockRun;
       final results = [];
       final executions = block["executions"];
-
       for (var i = 0; i < executions.length; i++) {
         final execution = executions[i];
         await init(execution, pluginConfiguration);
@@ -95,11 +98,14 @@ abstract class GptPlugin {
       final blockResult = {"blockRun": blockRun, "blockResults": results};
       blockResults.add(blockResult);
     }
-    if (!dryRun) {
+    if (!dryRun &&
+        blockResults.isNotEmpty &&
+        blockResults.first["blockResults"].isNotEmpty) {
       await writeProjectReport({
         "projectName": projectName,
         "projectVersion": projectVersion,
         "blockId": blockId,
+        "configuration": pluginConfiguration,
         "blockRuns": blockResults
       }, reportDir);
     }
