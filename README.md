@@ -900,6 +900,11 @@ blocks:
         blockIds:
           - chain-1
 ```
+#### Sample Report
+The report will display the entire chat for the configured block executions.
+
+<img width="1527" alt="report" src="https://user-images.githubusercontent.com/64116/236595603-aa37df83-0bd5-4997-b67a-e4357b912b6e.png">
+
 
 ## Install Program
 Make sure your have dart installed. Follow the instructions, in the link below.
