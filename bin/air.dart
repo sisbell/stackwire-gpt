@@ -8,6 +8,7 @@ import 'package:gpt/src/gpt_plugin.dart';
 import 'package:gpt/src/io/native_io.dart';
 import 'package:gpt/src/prompts.dart';
 import 'package:interact/interact.dart';
+import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
 final io = NativeIO();
@@ -30,6 +31,7 @@ class ArchetypeCommand extends Command {
 
   @override
   void run() async {
+    final archetypeDirectory = await downloadArchetypeArchive();
     final archetypeDirectories = {
       "Chain": "chain",
       "Prompt": "prompt",
@@ -46,10 +48,10 @@ class ArchetypeCommand extends Command {
     final projectVersion =
         Input(prompt: 'Project Version: ', defaultValue: "1.0").interact();
     final projectSelection = projectTypes[selectedProjectIndex];
-    final archetypeDirectoryName = archetypeDirectories[projectSelection];
-    final archetypeDirectory =
-        await getArchetypeDirectory(archetypeDirectoryName);
-    await io.copyDirectoryContents(archetypeDirectory, Directory(projectName));
+    final archetypeName = archetypeDirectories[projectSelection];
+    final sourceDir = path.join(archetypeDirectory, archetypeName);
+    await io.copyDirectoryContents(
+        Directory(sourceDir), Directory(projectName));
     Map<String, dynamic> templateProperties = {
       "projectName": projectName,
       "projectVersion": projectVersion

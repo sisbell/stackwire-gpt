@@ -1,3 +1,5 @@
+## 0.9.1
+Download Archetype Archive for Project Generation [#51](https://github.com/sisbell/stackwire-gpt/issues/51)
 ## 0.9.0
 CLI Support for Generating Projects [#11](https://github.com/sisbell/stackwire-gpt/issues/11)
 ## 0.8.0
