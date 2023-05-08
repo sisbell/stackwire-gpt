@@ -1,5 +1,5 @@
 Write me a story about ${character}. The main character is ${mainCharacterName}.
 If no main character is given, choose one. Write one sentence only.
 
-The response should be in JSON using the following structure.
+The response should be in JSON using the following structure:
 Only use these fields. {"mainCharacterName": "", "story": ""}

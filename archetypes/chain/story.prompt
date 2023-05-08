@@ -1,0 +1,13 @@
+The response will be in JSON Format.
+
+Captain ${captainsName} is near ${planet}. .
+The last part of the story is: ${story}
+Then the captain ${action}
+
+Tell me a story about what happens next.
+Be very descriptive. Write two sentences only.
+Give me the captains name, if I haven't given it.
+
+RESPONSE
+The response must only be in JSON using the following structure.
+Only use these fields. {"captainsName": "${captainsName}", "story": ""}

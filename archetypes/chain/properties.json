@@ -1,0 +1,13 @@
+{
+  "planet": [
+    "Earth",
+    "Venus",
+    "Jupiter"
+  ],
+  "action": [
+    "Blows up the planet",
+    "Observes the planet From Orbit",
+    "Lands on the planet",
+    "Zips around the planet and hopes no one notices"
+  ]
+}

@@ -1,0 +1,17 @@
+---
+projectName: "${projectName}"
+projectVersion: "${projectVersion}"
+apiKeyFile: "${apiKeyFile}"
+blocks:
+  - blockId: image-block-1
+    pluginName: ImageGptPlugin
+    executions:
+      #First Image
+      - id: img-1
+        sizes:
+          - 256
+          - 256
+          - 1024
+        prompt: image.prompt
+        properties:
+          imageDescription: ${imageDescription}

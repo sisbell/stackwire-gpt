@@ -1,3 +1,5 @@
+## 0.9.0
+CLI Support for Generating Projects [#11](https://github.com/sisbell/stackwire-gpt/issues/11)
 ## 0.8.0
 - Reporting Plugin for HTML Output [#48](https://github.com/sisbell/stackwire-gpt/issues/48)
 ## 0.7.0
