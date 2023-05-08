@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:path/path.dart' as path;
+
 import 'io.dart';
 
 class NativeIO implements IO {
@@ -41,7 +43,22 @@ class NativeIO implements IO {
     Directory directory = Directory(dirName);
     if (!directory.existsSync()) {
       directory.createSync(recursive: true);
-      print('Directory $dirName created.');
+    }
+  }
+
+  @override
+  Future<void> copyDirectoryContents(
+      Directory source, Directory destination) async {
+    createDirectoryIfNotExist(destination.path);
+    await for (var entity
+        in source.list(recursive: false, followLinks: false)) {
+      final newPath = path.join(destination.path, path.basename(entity.path));
+      if (entity is Directory) {
+        await Directory(newPath).create();
+        await copyDirectoryContents(entity, Directory(newPath));
+      } else if (entity is File) {
+        await entity.copy(newPath);
+      }
     }
   }
 }

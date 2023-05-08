@@ -87,7 +87,8 @@ class ExperimentGptPlugin extends GptPlugin {
       for (int i = 0; i < promptTemplates.length; i++) {
         var promptFileName = promptChain[i];
         var promptTemplate = promptTemplates[i];
-        final prompt = createPrompt(promptTemplate, promptValues);
+        final prompt =
+            substituteTemplateProperties(promptTemplate, promptValues);
         if (excludesMessageHistory.contains(promptFileName)) {
           requestParams['messages'] = [
             {"role": "user", "content": prompt}
@@ -116,7 +117,7 @@ class ExperimentGptPlugin extends GptPlugin {
 
         try {
           if (responseFormat == "json") {
-            addPromptValues(content, responseFormat, promptValues, fixJson);
+            addPromptValues(content, promptValues, fixJson);
           }
         } catch (e) {
           print(e);

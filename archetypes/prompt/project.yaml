@@ -1,0 +1,28 @@
+---
+projectName: "${projectName}"
+projectVersion: "${projectVersion}"
+apiKeyFile: "${apiKeyFile}"
+blocks:
+  - blockId: single-1
+    pluginName: ExperimentGptPlugin
+    blockRuns: ${blockRuns}
+    configuration:
+      requestParams:
+        model: gpt-3.5-turbo
+        temperature: 1.2
+        top_p: 1
+        max_tokens: 500
+    executions:
+      - id: exp-1
+        responseFormat: ${responseFormat}
+        fixJson: ${fixJson}
+        promptChain:
+          - ${promptName}
+        properties:
+          character: Commander in Starfleet
+  - blockId: report-1
+    pluginName: ReportingGptPlugin
+    executions:
+      - id: report-1
+        blockIds:
+          - single-1

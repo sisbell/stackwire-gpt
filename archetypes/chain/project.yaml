@@ -1,0 +1,38 @@
+---
+projectName: "${projectName}"
+projectVersion: "${projectVersion}"
+apiKeyFile: "${apiKeyFile}"
+blocks:
+  # Block demonstrates the use of importing properties
+  - blockId: chain-1
+    pluginName: ExperimentGptPlugin
+    blockRuns: ${blockRuns}
+    configuration:
+      requestParams:
+        model: gpt-3.5-turbo
+        temperature: 1.2
+        top_p: 1
+        max_tokens: 500
+    executions:
+      - id: exp-1-import
+        chainRuns: ${chainRuns} # Number of times to run the promptChain
+        promptChain:
+          - story.prompt
+          - user-action.prompt # Simulates user input
+        excludesMessageHistory:
+          - user-action.prompt
+        fixJson: true
+        responseFormat: json
+        # Import properties from a properties file
+        import:
+          propertiesFile: properties.json # predefined values
+          properties:
+            planet: 1 # Earth
+            action: 3 # Lands on the planet
+
+  - blockId: report-1
+    pluginName: ReportingGptPlugin
+    executions:
+      - id: report-1
+        blockIds:
+          - chain-1

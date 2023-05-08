@@ -64,7 +64,8 @@ class ImageGptPlugin extends GptPlugin {
   Future<List<dynamic>> createImageRequest(execution) async {
     final promptTemplate = await io.readFileAsString(imagePromptFile);
     final templateProperties = execution["properties"];
-    final prompt = createPrompt(promptTemplate, templateProperties);
+    final prompt =
+        substituteTemplateProperties(promptTemplate, templateProperties);
     final responseFormat = execution["responseFormat"] ?? "url";
     final imageCount = execution["imageCount"] ?? 1;
     final sizes = execution["sizes"];
