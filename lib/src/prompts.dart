@@ -1,24 +1,24 @@
 import 'dart:convert';
 
-void _addJsonContentToPromptValues(jsonContent, promptValues) {
+void addJsonContentToPromptValues(jsonContent, promptValues) {
   try {
     final newValues = jsonDecode(jsonContent);
     promptValues.addAll(newValues);
   } catch (e) {
-    throw Exception("Malformed JSON. Failing Experiment.");
+    throw FormatException("Malformed JSON. Failing Experiment.");
   }
 }
 
 void addPromptValues(content, promptValues, fixJson) {
   try {
-    _addJsonContentToPromptValues(content, promptValues);
+    addJsonContentToPromptValues(content, promptValues);
   } catch (e) {
     if (!fixJson) {
       rethrow;
     }
     final fixedJson = extractJson(content);
     if (fixedJson != null) {
-      _addJsonContentToPromptValues(fixedJson, promptValues);
+      addJsonContentToPromptValues(fixedJson, promptValues);
     } else {
       rethrow;
     }
@@ -70,7 +70,6 @@ String? extractJson(content) {
   if (startIndex != -1 && endIndex != -1) {
     return content.substring(startIndex, endIndex + 1);
   } else {
-    print('No JSON string found in the input.');
     return null;
   }
 }

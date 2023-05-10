@@ -2,6 +2,120 @@ import 'package:gpt/src/prompts.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('addJsonContentToPromptValues', () {
+    test('should add JSON content to promptValues', () {
+      final jsonContent = '{"key1": "value1", "key2": "value2"}';
+      final Map<String, dynamic> promptValues = {"key3": "value3"};
+
+      addJsonContentToPromptValues(jsonContent, promptValues);
+
+      expect(promptValues, {
+        "key1": "value1",
+        "key2": "value2",
+        "key3": "value3",
+      });
+    });
+
+    test('addJsonContentToPromptValues should throw an exception for malformed JSON', () {
+      final malformedJson = '{"key1": "value1", "key2": "value2';
+      final promptValues = <String, dynamic>{};
+      expect(
+            () => addJsonContentToPromptValues(malformedJson, promptValues),
+        throwsA(isA<FormatException>()),
+      );
+    });
+  });
+
+  group('addPromptValues', () {
+    test('should add JSON content to promptValues', () {
+      final content = '{"key1": "value1", "key2": "value2"}';
+      final Map<String, dynamic> promptValues = {"key3": "value3"};
+
+      addPromptValues(content, promptValues, false);
+
+      expect(promptValues, {
+        "key1": "value1",
+        "key2": "value2",
+        "key3": "value3",
+      });
+    });
+
+    test('should throw an exception for malformed JSON when fixJson is false', () {
+      final content = '{"key1": "value1", "key2": "value2';
+      final Map<String, dynamic> promptValues = {"key3": "value3"};
+
+      expect(() => addPromptValues(content, promptValues, false),
+          throwsA(isA<FormatException>()));
+    });
+
+    test('should add JSON content to promptValues when fixJson is true and JSON is extractable', () {
+      final content = 'Some text before JSON {"key1": "value1", "key2": "value2"} some text after JSON';
+      final Map<String, dynamic> promptValues = {"key3": "value3"};
+
+      addPromptValues(content, promptValues, true);
+
+      expect(promptValues, {
+        "key1": "value1",
+        "key2": "value2",
+        "key3": "value3",
+      });
+    });
+
+    test('should throw an exception for malformed JSON when fixJson is true and JSON is not extractable', () {
+      final content = '{"key1": "value1", "key2": "value2';
+      final Map<String, dynamic> promptValues = {"key3": "value3"};
+
+      expect(() => addPromptValues(content, promptValues, true),
+          throwsA(isA<FormatException>()));
+    });
+
+    test('should handle empty JSON content', () {
+      final content = '{}';
+      final Map<String, dynamic> promptValues = {"key1": "value1"};
+
+      addPromptValues(content, promptValues, false);
+
+      expect(promptValues, {"key1": "value1"});
+    });
+
+    test('should handle JSON content with only whitespace', () {
+      final content = '{  }';
+      final Map<String, dynamic> promptValues = {"key1": "value1"};
+
+      addPromptValues(content, promptValues, false);
+
+      expect(promptValues, {"key1": "value1"});
+    });
+
+    test('should handle JSON content with non-string values', () {
+      final content =
+          '{"key1": 42, "key2": true, "key3": [1, 2, 3], "key4": {"nestedKey": "nestedValue"}}';
+      final Map<String, dynamic> promptValues = {"key5": "value5"};
+
+      addPromptValues(content, promptValues, false);
+
+      expect(promptValues, {
+        "key1": 42,
+        "key2": true,
+        "key3": [1, 2, 3],
+        "key4": {"nestedKey": "nestedValue"},
+        "key5": "value5",
+      });
+    });
+
+    test('should handle JSON content with duplicate keys', () {
+      final content = '{"key1": "newValue1", "key2": "value2"}';
+      final Map<String, dynamic> promptValues = {"key1": "value1"};
+
+      addPromptValues(content, promptValues, false);
+
+      expect(promptValues, {
+        "key1": "newValue1",
+        "key2": "value2",
+      });
+    });
+  });
+
   group('extractJson', () {
     test('should return JSON string when input contains a JSON object', () {
       final content = 'Some text before {"key": "value"} some text after';
@@ -60,4 +174,44 @@ void main() {
       expect(result, 'No placeholders in this template.');
     });
   });
+
+  group('substituteTemplateProperties', () {
+    test('should replace placeholders with their corresponding values', () {
+      final template = 'Hello \${name}, welcome to \${location}';
+      final templateProperties = {'name': 'Alice', 'location': 'Wonderland'};
+
+      final result = substituteTemplateProperties(template, templateProperties);
+
+      expect(result, 'Hello Alice, welcome to Wonderland');
+    });
+
+    test('should replace unknown placeholders with an empty value', () {
+      final template = 'Hello \${name}, welcome to \${location}';
+      final templateProperties = {'name': 'Alice'};
+
+      final result = substituteTemplateProperties(template, templateProperties);
+
+      expect(result, 'Hello Alice, welcome to ');
+    });
+
+    test('should return the original template if there are no placeholders', () {
+      final template = 'Hello Alice, welcome to Wonderland';
+      final templateProperties = {};
+
+      final result = substituteTemplateProperties(template, templateProperties);
+
+      expect(result, template);
+    });
+
+    test('should replace placeholders with empty strings if properties are not in templateProperties', () {
+      final template = 'Hello \${name}, welcome to \${location}';
+      final templateProperties = {'age': 30};
+
+      final result = substituteTemplateProperties(template, templateProperties);
+
+      expect(result, 'Hello , welcome to ');
+    });
+  });
+
+
 }
