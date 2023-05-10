@@ -2,7 +2,7 @@ import 'package:gpt/src/prompts.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('_extractJson', () {
+  group('extractJson', () {
     test('should return JSON string when input contains a JSON object', () {
       final content = 'Some text before {"key": "value"} some text after';
       final result = extractJson(content);
@@ -25,6 +25,39 @@ void main() {
       final content = 'Some text before {"key": {"nestedKey": "nestedValue"}} some text after';
       final result = extractJson(content);
       expect(result, '{"key": {"nestedKey": "nestedValue"}}');
+    });
+  });
+
+  group('createPromptByIndex', () {
+    test('should replace placeholders with values at specified index', () {
+      final template = '\${key1} is friends with \${key2}.';
+      final templateProperties = {
+        'key1': ['Alice', 'Bob'],
+        'key2': ['Charlie', 'David']
+      };
+
+      final result = createPromptByIndex(template, templateProperties, 0);
+      expect(result, 'Alice is friends with Charlie.');
+    });
+
+    test('should throw an error if the index is out of range', () {
+      final template = 'Hello \${name}';
+      final templateProperties = {'name': ['Alice', 'Bob']};
+      final index = 2;
+
+      expect(() => createPromptByIndex(template, templateProperties, index),
+          throwsA(isA<RangeError>()));
+    });
+
+    test('should return template unchanged if no placeholders found', () {
+      final template = 'No placeholders in this template.';
+      final templateProperties = {
+        'key1': ['Alice', 'Bob'],
+        'key2': ['Charlie', 'David']
+      };
+
+      final result = createPromptByIndex(template, templateProperties, 0);
+      expect(result, 'No placeholders in this template.');
     });
   });
 }

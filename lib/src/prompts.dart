@@ -34,8 +34,16 @@ String substituteTemplateProperties(String template, templateProperties) {
 }
 
 String createPromptByIndex(String template, templateProperties, index) {
-  String modifiedTemplate = template.replaceAllMapped(placeholderPattern,
-      (Match match) => templateProperties[match[1]][index] ?? "");
+  String modifiedTemplate = template.replaceAllMapped(placeholderPattern, (Match match) {
+    if (templateProperties[match[1]] != null) {
+      if (index < templateProperties[match[1]].length) {
+        return templateProperties[match[1]][index] ?? "";
+      } else {
+        throw RangeError('Invalid prompt index: $index is out of range for the property ${match[1]}');
+      }
+    }
+    return "";
+  });
   return modifiedTemplate;
 }
 
