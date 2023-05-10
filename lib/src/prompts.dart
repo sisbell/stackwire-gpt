@@ -16,7 +16,7 @@ void addPromptValues(content, promptValues, fixJson) {
     if (!fixJson) {
       rethrow;
     }
-    final fixedJson = _extractJson(content);
+    final fixedJson = extractJson(content);
     if (fixedJson != null) {
       _addJsonContentToPromptValues(fixedJson, promptValues);
     } else {
@@ -39,11 +39,28 @@ String createPromptByIndex(String template, templateProperties, index) {
   return modifiedTemplate;
 }
 
-String? _extractJson(content) {
-  RegExp jsonPattern = RegExp(r'(\{.*?\})');
-  Match? jsonMatch = jsonPattern.firstMatch(content);
-  if (jsonMatch != null) {
-    return jsonMatch.group(1)!;
+String? extractJson(content) {
+  int bracketCount = 0;
+  int startIndex = -1;
+  int endIndex = -1;
+
+  for (int i = 0; i < content.length; i++) {
+    if (content[i] == '{') {
+      if (startIndex == -1) {
+        startIndex = i;
+      }
+      bracketCount++;
+    } else if (content[i] == '}') {
+      bracketCount--;
+      if (bracketCount == 0) {
+        endIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (startIndex != -1 && endIndex != -1) {
+    return content.substring(startIndex, endIndex + 1);
   } else {
     print('No JSON string found in the input.');
     return null;
