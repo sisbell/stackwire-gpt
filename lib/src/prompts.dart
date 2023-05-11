@@ -5,7 +5,7 @@ void addJsonContentToPromptValues(jsonContent, promptValues) {
     final newValues = jsonDecode(jsonContent);
     promptValues.addAll(newValues);
   } catch (e) {
-    throw FormatException("Malformed JSON. Failing Experiment.");
+    throw FormatException("Malformed JSON. Failing Experiment.", jsonContent);
   }
 }
 

@@ -107,7 +107,8 @@ class ExperimentGptPlugin extends GptPlugin {
         if (responseBody['errorCode'] != null) {
           results.add(createExperimentResult(
               "FAILURE", "Failed Request: ${responseBody['errorCode']}"));
-          throw Exception("Failed Request: ${responseBody['errorCode']}");
+          throw HttpException(
+              "Failed Request for Chat Completion: ${responseBody['errorCode']}");
         }
         results.add(createUserHistory(
             prompt, responseBody, promptFileName, promptValues, chainRun));

@@ -36,7 +36,6 @@ class ImageGptPlugin extends GptPlugin {
         "size": image["size"],
         "images": response["data"]
       };
-      print(response);
       results.add(result);
     }
   }
@@ -90,7 +89,7 @@ class ImageGptPlugin extends GptPlugin {
     } else if (size == 1024) {
       return "1024x1024";
     } else {
-      throw Exception("Invalid image size: $size");
+      throw ArgumentError("Invalid image size: $size", "execution.sizes");
     }
   }
 
@@ -101,7 +100,7 @@ class ImageGptPlugin extends GptPlugin {
       final file = File(savePath);
       await file.writeAsBytes(bytes);
     } else {
-      throw Exception('Failed to download image: HTTP ${response.statusCode}');
+      throw HttpException('Failed to download image', uri: Uri.parse(imageUrl));
     }
   }
 

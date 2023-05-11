@@ -30,7 +30,8 @@ class IOFileSystem {
       String content = await file.readAsString();
       return content;
     } catch (e) {
-      throw FileSystemException('Error occurred while reading file: $e');
+      throw FileSystemException(
+          'Error occurred while reading file: $e', filePath);
     }
   }
 
@@ -41,7 +42,7 @@ class IOFileSystem {
       await file.writeAsString(jsonString, flush: true);
     } catch (e) {
       throw FileSystemException(
-          'Error occurred while writing JSON to file: $e');
+          'Error occurred while writing JSON to file: $e', filePath);
     }
   }
 

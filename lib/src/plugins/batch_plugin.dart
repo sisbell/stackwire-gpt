@@ -48,7 +48,8 @@ class BatchGptPlugin extends GptPlugin {
         continue;
       }
       if (responseBody['errorCode'] != null) {
-        throw Exception("Failed Request: ${responseBody['errorCode']}");
+        throw HttpException(
+            "Failed Chat Completion Request: ${responseBody['errorCode']}");
       }
       final result = {
         "input": buildObject(batchData, i),

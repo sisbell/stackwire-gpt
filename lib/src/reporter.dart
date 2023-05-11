@@ -79,7 +79,8 @@ class ConcreteReporter extends Reporter {
       await file.writeAsString(dataToAppend,
           mode: FileMode.append, flush: true);
     } catch (e) {
-      throw FileSystemException('Error occurred while writing file: $e');
+      throw FileSystemException(
+          'Error occurred while writing file: $e', file.path);
     }
   }
 }
