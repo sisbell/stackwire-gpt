@@ -1,14 +1,12 @@
 import 'dart:convert';
-
 import 'dart:mirrors';
 
 import 'package:args/command_runner.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:gpt/src/archetypes.dart';
-import 'package:gpt/src/gpt_plugin.dart';
 import 'package:gpt/src/file_system.dart';
-
+import 'package:gpt/src/gpt_plugin.dart';
 import 'package:gpt/src/prompts.dart';
 import 'package:interact/interact.dart';
 import 'package:path/path.dart' as path;
@@ -36,7 +34,8 @@ class ArchetypeCommand extends Command {
 
   @override
   void run() async {
-    final archetypeDirectory = await downloadArchetypeArchive();
+    final builder = ArchetypeBuilder(localFileSystem);
+    final archetypeDirectory = await builder.downloadArchetypeArchive();
     final archetypeDirectories = {
       "Chain": "chain",
       "Prompt": "prompt",
@@ -81,13 +80,17 @@ class ArchetypeCommand extends Command {
     }
 
     print(templateProperties);
-    final projectYaml = await readProjectYaml(projectName);
+    final projectYaml = await builder.readProjectYaml(projectName);
     final calculatedProjectYaml =
         substituteTemplateProperties(projectYaml, templateProperties);
-    await fileSystem.writeString(
-        calculatedProjectYaml, "$projectName/project.yaml");
-
-    print("Created Project");
+    final isValid = builder.verifyYamlFormat(calculatedProjectYaml);
+    if (isValid) {
+      await fileSystem.writeString(
+          calculatedProjectYaml, "$projectName/project.yaml");
+      print("Created Project");
+    } else {
+      print("Invalid yaml file. Project not created");
+    }
   }
 
   void askBlockRuns(templateProperties) {
