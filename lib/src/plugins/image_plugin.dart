@@ -21,7 +21,7 @@ class ImageGptPlugin extends GptPlugin {
     executionId = execution["id"];
     imagePromptFile = execution["prompt"];
     imagesDir = "$reportDir/images/$blockId";
-    createDirectoryIfNotExist(imagesDir);
+    await createDirectoryIfNotExist(imagesDir);
     imageRequests = await createImageRequest(execution);
   }
 

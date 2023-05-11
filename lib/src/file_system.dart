@@ -47,7 +47,7 @@ class IOFileSystem {
 
   Future<void> copyDirectoryContents(
       Directory source, Directory destination) async {
-    createDirectoryIfNotExist(destination.path);
+    await createDirectoryIfNotExist(destination.path);
     await for (var entity
         in source.list(recursive: false, followLinks: false)) {
       final newPath = path.join(destination.path, path.basename(entity.path));

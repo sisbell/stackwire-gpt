@@ -82,7 +82,7 @@ abstract class GptPlugin {
     final startTime = DateTime.now();
     final pluginConfiguration = block["configuration"];
     blockRuns = block["blockRuns"] ?? 1;
-    createDirectoryIfNotExist(blockDataDir);
+    await createDirectoryIfNotExist(blockDataDir);
     final blockResults = [];
     for (var blockRun = 1; blockRun <= blockRuns; blockRun++) {
       print("----------\nStarting Block Run: $blockRun");
@@ -122,8 +122,8 @@ abstract class GptPlugin {
 
   Future<void> doExecution(results, dryRun) async {}
 
-  void createDirectoryIfNotExist(directory) {
-    fileSystem.createDirectoryIfNotExist(directory);
+  Future<void> createDirectoryIfNotExist(directory) async {
+    await fileSystem.createDirectoryIfNotExist(directory);
   }
 
   Future<void> logFailedRequest(requestBody) async {

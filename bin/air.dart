@@ -304,7 +304,7 @@ abstract class ProjectInitializeCommand extends Command {
     final projectVersion = project["projectVersion"];
     reportDir = "$outputDirName/$projectName/$projectVersion";
     final dataDir = "$reportDir/data";
-    fileSystem.createDirectoryIfNotExist(dataDir);
+    await fileSystem.createDirectoryIfNotExist(dataDir);
 
     blocks = project["blocks"];
     projectConfig = {
