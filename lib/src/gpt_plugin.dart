@@ -5,9 +5,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:file/local.dart' show LocalFileSystem;
+import 'package:gpt/src/reporter.dart';
 import 'package:http/http.dart' as http;
 
-import 'io/io.dart';
+import 'file_system.dart';
 import 'prompts.dart';
 
 part "plugins/batch_plugin.dart";
@@ -19,7 +21,6 @@ part "plugins/image_plugin.dart";
 part "plugins/reporting_plugin.dart";
 
 abstract class GptPlugin {
-  IO io;
   Map<String, dynamic> _projectConfig;
   Map<String, dynamic> block;
   late String apiKey;
@@ -34,8 +35,10 @@ abstract class GptPlugin {
   late int blockRuns;
   late String metricsFile;
   var currentBlockRun = 0;
+  late Reporter reporter;
+  late IOFileSystem fileSystem;
 
-  GptPlugin(this._projectConfig, this.block, this.io) {
+  GptPlugin(this._projectConfig, this.block) {
     apiKey = _projectConfig["apiKey"];
     outputDir = _projectConfig["outputDir"];
     projectName = _projectConfig["projectName"];
@@ -46,6 +49,8 @@ abstract class GptPlugin {
     pluginName = block["pluginName"];
     blockDataDir = "$dataDir/$blockId";
     metricsFile = "$reportDir/metrics-$blockId.csv";
+    fileSystem = IOFileSystem(fileSystem: LocalFileSystem());
+    reporter = ConcreteReporter(fileSystem);
   }
 
   num apiCallCount() {
@@ -118,38 +123,22 @@ abstract class GptPlugin {
   Future<void> doExecution(results, dryRun) async {}
 
   void createDirectoryIfNotExist(directory) {
-    io.createDirectoryIfNotExist(directory);
+    fileSystem.createDirectoryIfNotExist(directory);
   }
 
   Future<void> logFailedRequest(requestBody) async {
-    final directory = "$blockDataDir/$currentBlockRun";
-    io.createDirectoryIfNotExist(directory);
-    final responseId = "failed";
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    await io.writeString(
-        requestBody, "$directory/$timestamp-$responseId-request.json");
+    final toDirectory = "$blockDataDir/$currentBlockRun";
+    await reporter.logFailedRequest(requestBody, toDirectory);
   }
 
   Future<void> logRequestAndResponse(requestBody, responseBody) async {
-    final directory = "$blockDataDir/$currentBlockRun";
-    io.createDirectoryIfNotExist(directory);
-    final responseId = responseBody["id"] ?? "";
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final outputRequestFile = "$directory/$timestamp-$responseId-request.json";
-    final outputResponseFile =
-        "$directory/$timestamp-$responseId-response.json";
-    print("\t\tResponse ID:  $responseId");
-    await io.writeString(requestBody, outputRequestFile);
-    await io.writeString(jsonEncode(responseBody), outputResponseFile);
+    final toDirectory = "$blockDataDir/$currentBlockRun";
+    await reporter.logRequestAndResponse(
+        requestBody, responseBody, toDirectory);
   }
 
   Future<void> writeProjectReport(results, reportDir) async {
-    final projectName = results["projectName"];
-    final projectVersion = results["projectVersion"];
-    final blockId = results["blockId"];
-    final fileName = "$projectName-$projectVersion-$blockId-report.json";
-    print("Writing project report: $reportDir/$fileName");
-    await io.writeMap(results, "$reportDir/$fileName");
+    await reporter.writeProjectReport(results, reportDir);
   }
 
   Future<Map<String, dynamic>> sendHttpPostRequest(
@@ -194,7 +183,7 @@ abstract class GptPlugin {
   }
 
   Future<Map<String, dynamic>> readJsonFile(String filePath) async {
-    String jsonString = await io.readFileAsString(filePath);
+    String jsonString = await fileSystem.readFileAsString(filePath);
     return jsonDecode(jsonString);
   }
 
@@ -203,27 +192,6 @@ abstract class GptPlugin {
   }
 
   Future<void> writeMetrics(responseBody, executionId, tag) async {
-    final responseId = responseBody["id"] ?? "N/A";
-    final usage = responseBody["usage"];
-    final promptTokens = usage?['prompt_tokens'] ?? 0;
-    final completionTokens = usage?['completion_tokens'] ?? 0;
-    final totalTokens = usage?['total_tokens'] ?? 0;
-
-    final file = File(metricsFile);
-    bool exists = await file.exists();
-    if (!exists) {
-      await file.writeAsString(
-          "request_id, executionId, tag, request_time, prompt_tokens, completion_tokens, total_tokens\n");
-    }
-    final sink = File(metricsFile).openWrite(mode: FileMode.append);
-    try {
-      final requestTime = responseBody['requestTime'];
-      sink.write(
-          "$responseId, $executionId, $tag, $requestTime, $promptTokens, $completionTokens, $totalTokens\n");
-    } catch (e) {
-      throw Exception('Error occurred while writing file: $e');
-    } finally {
-      sink.close();
-    }
+    await reporter.writeMetrics(responseBody, executionId, tag, metricsFile);
   }
 }

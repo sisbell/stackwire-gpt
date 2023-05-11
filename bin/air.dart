@@ -1,17 +1,22 @@
 import 'dart:convert';
-import 'dart:io';
+
 import 'dart:mirrors';
 
 import 'package:args/command_runner.dart';
+import 'package:file/file.dart';
+import 'package:file/local.dart';
 import 'package:gpt/src/archetypes.dart';
 import 'package:gpt/src/gpt_plugin.dart';
-import 'package:gpt/src/io/native_io.dart';
+import 'package:gpt/src/file_system.dart';
+
 import 'package:gpt/src/prompts.dart';
 import 'package:interact/interact.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
-final io = NativeIO();
+final localFileSystem = LocalFileSystem();
+
+final fileSystem = IOFileSystem(fileSystem: localFileSystem);
 
 void main(List<String> arguments) async {
   CommandRunner("air", "A command line tool for running GPT commands")
@@ -49,9 +54,10 @@ class ArchetypeCommand extends Command {
         Input(prompt: 'Project Version: ', defaultValue: "1.0").interact();
     final projectSelection = projectTypes[selectedProjectIndex];
     final archetypeName = archetypeDirectories[projectSelection];
-    final sourceDir = path.join(archetypeDirectory, archetypeName);
-    await io.copyDirectoryContents(
-        Directory(sourceDir), Directory(projectName));
+    final projectDir = localFileSystem.directory(projectName);
+    final sourceDir =
+        localFileSystem.directory(path.join(archetypeDirectory, archetypeName));
+    await fileSystem.copyDirectoryContents(sourceDir, projectDir);
     Map<String, dynamic> templateProperties = {
       "projectName": projectName,
       "projectVersion": projectVersion
@@ -78,7 +84,8 @@ class ArchetypeCommand extends Command {
     final projectYaml = await readProjectYaml(projectName);
     final calculatedProjectYaml =
         substituteTemplateProperties(projectYaml, templateProperties);
-    await io.writeString(calculatedProjectYaml, "$projectName/project.yaml");
+    await fileSystem.writeString(
+        calculatedProjectYaml, "$projectName/project.yaml");
 
     print("Created Project");
   }
@@ -125,7 +132,7 @@ class ArchetypeCommand extends Command {
       templateProperties.addAll({"apiKeyFile": keyFile});
     } else if (selectedKeyIndex == 2) {
       final key = Input(prompt: 'API Key: ').interact();
-      io.writeString(key, "$projectName/api_key");
+      fileSystem.writeString(key, "$projectName/api_key");
       templateProperties.addAll({"apiKeyFile": "api_key"});
     }
   }
@@ -207,7 +214,7 @@ class CleanCommand extends ProjectInitializeCommand {
   @override
   Future<void> run() async {
     await super.run();
-    Directory directory = Directory(outputDirName);
+    Directory directory = localFileSystem.directory(outputDirName);
     if (directory.existsSync()) {
       directory.deleteSync(recursive: true);
       print(
@@ -267,9 +274,8 @@ GptPlugin getPlugin(block, projectConfig) {
       currentMirrorSystem().findLibrary(Symbol('gpt_plugins'));
   ClassMirror pluginMirror =
       libraryMirror.declarations[Symbol(pluginName)] as ClassMirror;
-  final gptPlugin =
-      pluginMirror.newInstance(Symbol(''), [projectConfig, block, io]).reflectee
-          as GptPlugin;
+  final gptPlugin = pluginMirror
+      .newInstance(Symbol(''), [projectConfig, block]).reflectee as GptPlugin;
   return gptPlugin;
 }
 
@@ -289,13 +295,13 @@ abstract class ProjectInitializeCommand extends Command {
     String projectFile = 'project.yaml';
     project = await readYamlFile(projectFile);
     final apiKeyFile = project['apiKeyFile'] ?? "api_key";
-    final apiKey = await io.readFileAsString(apiKeyFile);
+    final apiKey = await fileSystem.readFileAsString(apiKeyFile);
     outputDirName = project['outputDir'] ?? "output";
     final projectName = project["projectName"];
     final projectVersion = project["projectVersion"];
     reportDir = "$outputDirName/$projectName/$projectVersion";
     final dataDir = "$reportDir/data";
-    io.createDirectoryIfNotExist(dataDir);
+    fileSystem.createDirectoryIfNotExist(dataDir);
 
     blocks = project["blocks"];
     projectConfig = {
@@ -308,13 +314,8 @@ abstract class ProjectInitializeCommand extends Command {
     };
   }
 
-  Future<Map<String, dynamic>> readJsonFile(String filePath) async {
-    String jsonString = await io.readFileAsString(filePath);
-    return jsonDecode(jsonString);
-  }
-
   Future<Map<String, dynamic>> readYamlFile(String filePath) async {
-    String text = await io.readFileAsString(filePath);
+    String text = await fileSystem.readFileAsString(filePath);
     final yamlObject = loadYaml(text);
     return jsonDecode(json.encode(yamlObject));
   }

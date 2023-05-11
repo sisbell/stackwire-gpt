@@ -1,7 +1,7 @@
 part of gpt_plugins;
 
 class ExperimentGptPlugin extends GptPlugin {
-  ExperimentGptPlugin(super.projectConfig, super.block, super.io);
+  ExperimentGptPlugin(super.projectConfig, super.block);
 
   late int chainRuns;
 
@@ -38,11 +38,12 @@ class ExperimentGptPlugin extends GptPlugin {
     fixJson = execution["fixJson"] ?? false;
     String? systemMessageFile = execution['systemMessageFile'];
     systemMessage = systemMessageFile != null
-        ? await io.readFileAsString(systemMessageFile)
+        ? await fileSystem.readFileAsString(systemMessageFile)
         : null;
     promptChain = execution['promptChain'];
-    List<Future<String>> futurePrompts =
-        promptChain.map((e) async => await io.readFileAsString(e)).toList();
+    List<Future<String>> futurePrompts = promptChain
+        .map((e) async => await fileSystem.readFileAsString(e))
+        .toList();
     promptTemplates = await Future.wait(futurePrompts);
     excludesMessageHistory = execution["excludesMessageHistory"] ?? [];
     final properties = execution['properties'] ?? {};

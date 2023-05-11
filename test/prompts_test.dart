@@ -16,11 +16,13 @@ void main() {
       });
     });
 
-    test('addJsonContentToPromptValues should throw an exception for malformed JSON', () {
+    test(
+        'addJsonContentToPromptValues should throw an exception for malformed JSON',
+        () {
       final malformedJson = '{"key1": "value1", "key2": "value2';
       final promptValues = <String, dynamic>{};
       expect(
-            () => addJsonContentToPromptValues(malformedJson, promptValues),
+        () => addJsonContentToPromptValues(malformedJson, promptValues),
         throwsA(isA<FormatException>()),
       );
     });
@@ -40,7 +42,8 @@ void main() {
       });
     });
 
-    test('should throw an exception for malformed JSON when fixJson is false', () {
+    test('should throw an exception for malformed JSON when fixJson is false',
+        () {
       final content = '{"key1": "value1", "key2": "value2';
       final Map<String, dynamic> promptValues = {"key3": "value3"};
 
@@ -48,8 +51,11 @@ void main() {
           throwsA(isA<FormatException>()));
     });
 
-    test('should add JSON content to promptValues when fixJson is true and JSON is extractable', () {
-      final content = 'Some text before JSON {"key1": "value1", "key2": "value2"} some text after JSON';
+    test(
+        'should add JSON content to promptValues when fixJson is true and JSON is extractable',
+        () {
+      final content =
+          'Some text before JSON {"key1": "value1", "key2": "value2"} some text after JSON';
       final Map<String, dynamic> promptValues = {"key3": "value3"};
 
       addPromptValues(content, promptValues, true);
@@ -61,7 +67,9 @@ void main() {
       });
     });
 
-    test('should throw an exception for malformed JSON when fixJson is true and JSON is not extractable', () {
+    test(
+        'should throw an exception for malformed JSON when fixJson is true and JSON is not extractable',
+        () {
       final content = '{"key1": "value1", "key2": "value2';
       final Map<String, dynamic> promptValues = {"key3": "value3"};
 
@@ -129,14 +137,18 @@ void main() {
       expect(result, isNull);
     });
 
-    test('should return the first JSON object when input contains multiple JSON objects', () {
-      final content = 'Some text before {"key1": "value1"} some text in between {"key2": "value2"} some text after';
+    test(
+        'should return the first JSON object when input contains multiple JSON objects',
+        () {
+      final content =
+          'Some text before {"key1": "value1"} some text in between {"key2": "value2"} some text after';
       final result = extractJson(content);
       expect(result, '{"key1": "value1"}');
     });
 
     test('should return JSON object with nested JSON object', () {
-      final content = 'Some text before {"key": {"nestedKey": "nestedValue"}} some text after';
+      final content =
+          'Some text before {"key": {"nestedKey": "nestedValue"}} some text after';
       final result = extractJson(content);
       expect(result, '{"key": {"nestedKey": "nestedValue"}}');
     });
@@ -156,7 +168,9 @@ void main() {
 
     test('should throw an error if the index is out of range', () {
       final template = 'Hello \${name}';
-      final templateProperties = {'name': ['Alice', 'Bob']};
+      final templateProperties = {
+        'name': ['Alice', 'Bob']
+      };
       final index = 2;
 
       expect(() => createPromptByIndex(template, templateProperties, index),
@@ -194,7 +208,8 @@ void main() {
       expect(result, 'Hello Alice, welcome to ');
     });
 
-    test('should return the original template if there are no placeholders', () {
+    test('should return the original template if there are no placeholders',
+        () {
       final template = 'Hello Alice, welcome to Wonderland';
       final templateProperties = {};
 
@@ -203,7 +218,9 @@ void main() {
       expect(result, template);
     });
 
-    test('should replace placeholders with empty strings if properties are not in templateProperties', () {
+    test(
+        'should replace placeholders with empty strings if properties are not in templateProperties',
+        () {
       final template = 'Hello \${name}, welcome to \${location}';
       final templateProperties = {'age': 30};
 
@@ -212,6 +229,4 @@ void main() {
       expect(result, 'Hello , welcome to ');
     });
   });
-
-
 }

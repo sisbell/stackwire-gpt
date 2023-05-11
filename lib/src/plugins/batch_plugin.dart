@@ -1,7 +1,7 @@
 part of gpt_plugins;
 
 class BatchGptPlugin extends GptPlugin {
-  BatchGptPlugin(super.projectConfig, super.block, super.io);
+  BatchGptPlugin(super.projectConfig, super.block);
 
   late Map<String, dynamic> batchData;
 
@@ -25,10 +25,10 @@ class BatchGptPlugin extends GptPlugin {
     executionId = execution["id"];
     requestParams = Map.from(pluginConfiguration["requestParams"]);
     promptFile = execution["prompt"];
-    promptTemplate = await io.readFileAsString(promptFile);
+    promptTemplate = await fileSystem.readFileAsString(promptFile);
     String? systemMessageFile = execution['systemMessageFile'];
     systemMessage = systemMessageFile != null
-        ? await io.readFileAsString(systemMessageFile)
+        ? await fileSystem.readFileAsString(systemMessageFile)
         : null;
     final dataFile = execution["dataFile"];
     batchData = await readJsonFile(dataFile);

@@ -1,7 +1,7 @@
 part of gpt_plugins;
 
 class ImageGptPlugin extends GptPlugin {
-  ImageGptPlugin(super.projectConfig, super.block, super.io);
+  ImageGptPlugin(super.projectConfig, super.block);
 
   late String executionId;
 
@@ -62,7 +62,7 @@ class ImageGptPlugin extends GptPlugin {
   }
 
   Future<List<dynamic>> createImageRequest(execution) async {
-    final promptTemplate = await io.readFileAsString(imagePromptFile);
+    final promptTemplate = await fileSystem.readFileAsString(imagePromptFile);
     final templateProperties = execution["properties"];
     final prompt =
         substituteTemplateProperties(promptTemplate, templateProperties);
