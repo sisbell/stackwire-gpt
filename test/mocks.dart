@@ -7,3 +7,14 @@ class MockResponseBody extends Mock {
 
   dynamic operator [](String key) => _data[key];
 }
+
+final testProjectConfig = {
+  "apiKey": "sk-ssss",
+  "outputDir": "output_dir",
+  "projectName": "myProject",
+  "projectVersion": "projectVersion",
+  "reportDir": "reportDir",
+  "dataDir": "dataDir"
+};
+
+final testBlock = {"blockId": "blockId", "pluginName": "pluginName"};

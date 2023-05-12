@@ -3,27 +3,27 @@ library gpt_plugins;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:file/local.dart' show LocalFileSystem;
+import 'package:file/file.dart';
+import 'package:file/local.dart';
+import 'package:gpt/src/network_client.dart';
 import 'package:gpt/src/reporter.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 
-import 'file_system.dart';
+import 'io_helper.dart';
 import 'prompts.dart';
 
 part "plugins/batch_plugin.dart";
-
 part "plugins/experiment_plugin.dart";
-
 part "plugins/image_plugin.dart";
-
 part "plugins/reporting_plugin.dart";
 
 abstract class GptPlugin {
   Map<String, dynamic> _projectConfig;
   Map<String, dynamic> block;
-  late String apiKey;
+  late FileSystem fileSystem;
+  late NetworkClient networkClient;
+
   late String dataDir;
   late String outputDir;
   late String projectName;
@@ -36,10 +36,13 @@ abstract class GptPlugin {
   late String metricsFile;
   var currentBlockRun = 0;
   late Reporter reporter;
-  late IOFileSystem fileSystem;
+  late IOHelper ioHelper;
 
-  GptPlugin(this._projectConfig, this.block) {
-    apiKey = _projectConfig["apiKey"];
+  GptPlugin(this._projectConfig, this.block,
+      {FileSystem? fileSystem,
+      NetworkClient? networkClient}) {
+    this.fileSystem = fileSystem ?? LocalFileSystem();
+
     outputDir = _projectConfig["outputDir"];
     projectName = _projectConfig["projectName"];
     projectVersion = _projectConfig["projectVersion"];
@@ -49,8 +52,12 @@ abstract class GptPlugin {
     pluginName = block["pluginName"];
     blockDataDir = "$dataDir/$blockId";
     metricsFile = "$reportDir/metrics-$blockId.csv";
-    fileSystem = IOFileSystem(fileSystem: LocalFileSystem());
-    reporter = ConcreteReporter(fileSystem);
+
+    ioHelper = IOHelper(fileSystem: this.fileSystem);
+    reporter = ConcreteReporter(ioHelper);
+    final apiKey = _projectConfig["apiKey"];
+    this.networkClient =
+        networkClient ?? NetworkClient(apiKey, reporter, fileSystem!, Client());
   }
 
   num apiCallCount() {
@@ -82,7 +89,7 @@ abstract class GptPlugin {
     final startTime = DateTime.now();
     final pluginConfiguration = block["configuration"];
     blockRuns = block["blockRuns"] ?? 1;
-    await createDirectoryIfNotExist(blockDataDir);
+    await ioHelper.createDirectoryIfNotExist(blockDataDir);
     final blockResults = [];
     for (var blockRun = 1; blockRun <= blockRuns; blockRun++) {
       print("----------\nStarting Block Run: $blockRun");
@@ -106,7 +113,7 @@ abstract class GptPlugin {
     if (!dryRun &&
         blockResults.isNotEmpty &&
         blockResults.first["blockResults"].isNotEmpty) {
-      await writeProjectReport({
+      await reporter.writeProjectReport({
         "projectName": projectName,
         "projectVersion": projectVersion,
         "blockId": blockId,
@@ -121,75 +128,6 @@ abstract class GptPlugin {
   }
 
   Future<void> doExecution(results, dryRun) async {}
-
-  Future<void> createDirectoryIfNotExist(directory) async {
-    await fileSystem.createDirectoryIfNotExist(directory);
-  }
-
-  Future<void> logFailedRequest(requestBody) async {
-    final toDirectory = "$blockDataDir/$currentBlockRun";
-    await reporter.logFailedRequest(requestBody, toDirectory);
-  }
-
-  Future<void> logRequestAndResponse(requestBody, responseBody) async {
-    final toDirectory = "$blockDataDir/$currentBlockRun";
-    await reporter.logRequestAndResponse(
-        requestBody, responseBody, toDirectory);
-  }
-
-  Future<void> writeProjectReport(results, reportDir) async {
-    await reporter.writeProjectReport(results, reportDir);
-  }
-
-  Future<Map<String, dynamic>> sendHttpPostRequest(
-      requestBody, urlPath, executionId, tag, dryRun) async {
-    final requestBodyStr = jsonEncode(requestBody);
-    if (dryRun) {
-      print("\tPOST to https://api.openai.com/$urlPath");
-      print("\t\t$requestBodyStr");
-      return {};
-    }
-    print("\n\tMaking call to OpenAI: $urlPath");
-    try {
-      final client = HttpClient();
-      final startTime = DateTime.now().millisecondsSinceEpoch;
-      final request =
-          await client.postUrl(Uri.parse("https://api.openai.com/$urlPath"));
-      request.headers.add(HttpHeaders.contentTypeHeader, "application/json");
-      request.headers.add(HttpHeaders.authorizationHeader, "Bearer $apiKey");
-      request.write(requestBodyStr);
-      HttpClientResponse response = await request.close();
-      final endTime = DateTime.now().millisecondsSinceEpoch;
-      print("\t\trequestTime: ${(endTime - startTime)}");
-      if (response.statusCode == 200) {
-        print('\t\tOpenAI Request successful.');
-      } else {
-        print(
-            '\t\tOpenAI Request failed with status code: ${response.statusCode}');
-        print(requestBodyStr);
-        logFailedRequest(requestBodyStr);
-        return {"errorCode": response.statusCode};
-      }
-      Map<String, dynamic> responseBody =
-          jsonDecode(await readResponse(response));
-      responseBody.addAll({"requestTime": (endTime - startTime)});
-      logRequestAndResponse(requestBodyStr, responseBody);
-      writeMetrics(responseBody, executionId, tag);
-      return responseBody;
-    } catch (e) {
-      print('Error occurred during the request: $e');
-    }
-    return {};
-  }
-
-  Future<Map<String, dynamic>> readJsonFile(String filePath) async {
-    String jsonString = await fileSystem.readFileAsString(filePath);
-    return jsonDecode(jsonString);
-  }
-
-  Future<String> readResponse(HttpClientResponse response) async {
-    return response.transform(utf8.decoder).join();
-  }
 
   Future<void> writeMetrics(responseBody, executionId, tag) async {
     await reporter.writeMetrics(responseBody, executionId, tag, metricsFile);

@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:file/file.dart';
 import 'package:path/path.dart' as path;
 
-class IOFileSystem {
+class IOHelper {
   final FileSystem fileSystem;
 
-  IOFileSystem({required this.fileSystem});
+  IOHelper({required this.fileSystem});
 
   File file(path) {
     return fileSystem.file(path);
@@ -33,6 +33,11 @@ class IOFileSystem {
       throw FileSystemException(
           'Error occurred while reading file: $e', filePath);
     }
+  }
+
+  Future<Map<String, dynamic>> readJsonFile(String filePath) async {
+    String jsonString = await readFileAsString(filePath);
+    return jsonDecode(jsonString);
   }
 
   Future<void> writeMap(Map<String, dynamic> data, String filePath) async {

@@ -1,7 +1,8 @@
 part of gpt_plugins;
 
 class BatchGptPlugin extends GptPlugin {
-  BatchGptPlugin(super.projectConfig, super.block);
+  BatchGptPlugin(super.projectConfig, super.block,
+      {super.fileSystem, super.networkClient});
 
   late Map<String, dynamic> batchData;
 
@@ -25,13 +26,13 @@ class BatchGptPlugin extends GptPlugin {
     executionId = execution["id"];
     requestParams = Map.from(pluginConfiguration["requestParams"]);
     promptFile = execution["prompt"];
-    promptTemplate = await fileSystem.readFileAsString(promptFile);
+    promptTemplate = await ioHelper.readFileAsString(promptFile);
     String? systemMessageFile = execution['systemMessageFile'];
     systemMessage = systemMessageFile != null
-        ? await fileSystem.readFileAsString(systemMessageFile)
+        ? await ioHelper.readFileAsString(systemMessageFile)
         : null;
     final dataFile = execution["dataFile"];
-    batchData = await readJsonFile(dataFile);
+    batchData = await ioHelper.readJsonFile(dataFile);
   }
 
   @override
@@ -61,8 +62,10 @@ class BatchGptPlugin extends GptPlugin {
 
   Future<Map<String, dynamic>> makeChatCompletionRequest(
       requestBody, executionId, tag, dryRun) async {
-    return sendHttpPostRequest(
-        requestBody, "v1/chat/completions", executionId, tag, dryRun);
+    final toDirectory = "$blockDataDir/$currentBlockRun";
+    return networkClient.sendHttpPostRequest(
+        requestBody, "v1/chat/completions", toDirectory,
+        dryRun: dryRun);
   }
 
   Map<String, String> buildObject(inputMap, int index) {

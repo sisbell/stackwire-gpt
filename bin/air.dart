@@ -5,8 +5,8 @@ import 'package:args/command_runner.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:gpt/src/archetypes.dart';
-import 'package:gpt/src/file_system.dart';
 import 'package:gpt/src/gpt_plugin.dart';
+import 'package:gpt/src/io_helper.dart';
 import 'package:gpt/src/prompts.dart';
 import 'package:interact/interact.dart';
 import 'package:path/path.dart' as path;
@@ -14,7 +14,7 @@ import 'package:yaml/yaml.dart';
 
 final localFileSystem = LocalFileSystem();
 
-final fileSystem = IOFileSystem(fileSystem: localFileSystem);
+final ioHelper = IOHelper(fileSystem: localFileSystem);
 
 void main(List<String> arguments) async {
   CommandRunner("air", "A command line tool for running GPT commands")
@@ -56,7 +56,7 @@ class ArchetypeCommand extends Command {
     final projectDir = localFileSystem.directory(projectName);
     final sourceDir =
         localFileSystem.directory(path.join(archetypeDirectory, archetypeName));
-    await fileSystem.copyDirectoryContents(sourceDir, projectDir);
+    await ioHelper.copyDirectoryContents(sourceDir, projectDir);
     Map<String, dynamic> templateProperties = {
       "projectName": projectName,
       "projectVersion": projectVersion
@@ -85,7 +85,7 @@ class ArchetypeCommand extends Command {
         substituteTemplateProperties(projectYaml, templateProperties);
     final isValid = builder.verifyYamlFormat(calculatedProjectYaml);
     if (isValid) {
-      await fileSystem.writeString(
+      await ioHelper.writeString(
           calculatedProjectYaml, "$projectName/project.yaml");
       print("Created Project");
     } else {
@@ -135,7 +135,7 @@ class ArchetypeCommand extends Command {
       templateProperties.addAll({"apiKeyFile": keyFile});
     } else if (selectedKeyIndex == 2) {
       final key = Input(prompt: 'API Key: ').interact();
-      fileSystem.writeString(key, "$projectName/api_key");
+      ioHelper.writeString(key, "$projectName/api_key");
       templateProperties.addAll({"apiKeyFile": "api_key"});
     }
   }
@@ -298,13 +298,13 @@ abstract class ProjectInitializeCommand extends Command {
     String projectFile = 'project.yaml';
     project = await readYamlFile(projectFile);
     final apiKeyFile = project['apiKeyFile'] ?? "api_key";
-    final apiKey = await fileSystem.readFileAsString(apiKeyFile);
+    final apiKey = await ioHelper.readFileAsString(apiKeyFile);
     outputDirName = project['outputDir'] ?? "output";
     final projectName = project["projectName"];
     final projectVersion = project["projectVersion"];
     reportDir = "$outputDirName/$projectName/$projectVersion";
     final dataDir = "$reportDir/data";
-    await fileSystem.createDirectoryIfNotExist(dataDir);
+    await ioHelper.createDirectoryIfNotExist(dataDir);
 
     blocks = project["blocks"];
     projectConfig = {
@@ -318,7 +318,7 @@ abstract class ProjectInitializeCommand extends Command {
   }
 
   Future<Map<String, dynamic>> readYamlFile(String filePath) async {
-    String text = await fileSystem.readFileAsString(filePath);
+    String text = await ioHelper.readFileAsString(filePath);
     final yamlObject = loadYaml(text);
     return jsonDecode(json.encode(yamlObject));
   }

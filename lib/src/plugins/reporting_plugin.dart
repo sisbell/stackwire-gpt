@@ -3,13 +3,14 @@ part of gpt_plugins;
 class ReportingGptPlugin extends GptPlugin {
   late List<String> reports;
 
-  ReportingGptPlugin(super.projectConfig, super.block);
+  ReportingGptPlugin(super.projectConfig, super.block,
+      {super.fileSystem, super.networkClient});
 
   @override
   Future<void> init(execution, pluginConfiguration) async {
     List<dynamic> blockIds = execution["blockIds"];
     List<Future<String>> futurePrompts = blockIds
-        .map((e) async => await fileSystem.readFileAsString(
+        .map((e) async => await ioHelper.readFileAsString(
             "$reportDir/$projectName-$projectVersion-$e-report.json"))
         .toList();
     reports = await Future.wait(futurePrompts);
@@ -33,7 +34,7 @@ class ReportingGptPlugin extends GptPlugin {
     final fileName = "$projectName-$projectVersion-report.html";
     print("Writing project report: $reportDir/$fileName");
     final report = generateHtmlWrapper(tables.toString());
-    final outputFile = File("$reportDir/$fileName");
+    final outputFile = fileSystem.file("$reportDir/$fileName");
     await outputFile.writeAsString(report);
   }
 

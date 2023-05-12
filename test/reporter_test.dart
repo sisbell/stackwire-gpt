@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:file/file.dart';
 import 'package:file/memory.dart';
-import 'package:gpt/src/file_system.dart';
+import 'package:gpt/src/io_helper.dart';
 import 'package:gpt/src/reporter.dart';
 import 'package:test/test.dart';
 
@@ -11,8 +11,8 @@ void main() {
       'logRequestAndResponse should log request and response files in the specified directory',
       () async {
     final memoryFileSystem = MemoryFileSystem();
-    final customFileSystem = IOFileSystem(fileSystem: memoryFileSystem);
-    final reporter = ConcreteReporter(customFileSystem);
+    final ioHelper = IOHelper(fileSystem: memoryFileSystem);
+    final reporter = ConcreteReporter(ioHelper);
 
     final requestBody = 'This is a sample request body.';
     final responseBody = {
@@ -43,7 +43,7 @@ void main() {
 
   test('logFailedRequest should log requestBody with content', () async {
     final fileSystem = MemoryFileSystem();
-    final reporter = ConcreteReporter(IOFileSystem(fileSystem: fileSystem));
+    final reporter = ConcreteReporter(IOHelper(fileSystem: fileSystem));
 
     final requestBody = 'This is a sample failed request body.';
     final toDirectory = '/failed_requests';
@@ -63,7 +63,7 @@ void main() {
 
   test('logFailedRequest should log empty requestBody', () async {
     final fileSystem = MemoryFileSystem();
-    final reporter = ConcreteReporter(IOFileSystem(fileSystem: fileSystem));
+    final reporter = ConcreteReporter(IOHelper(fileSystem: fileSystem));
 
     final requestBody = '';
     final toDirectory = '/empty_failed_requests';
@@ -83,13 +83,13 @@ void main() {
 
   group('writeProjectReport', () {
     late MemoryFileSystem memoryFileSystem;
-    late IOFileSystem fileSystem;
+    late IOHelper fileSystem;
     late ConcreteReporter reporter;
     late Map<String, dynamic> results;
 
     setUp(() {
       memoryFileSystem = MemoryFileSystem();
-      fileSystem = IOFileSystem(fileSystem: memoryFileSystem);
+      fileSystem = IOHelper(fileSystem: memoryFileSystem);
       reporter = ConcreteReporter(fileSystem);
 
       results = {
@@ -134,14 +134,14 @@ void main() {
 
   group('writeMetrics', () {
     late MemoryFileSystem memoryFileSystem;
-    late IOFileSystem fileSystem;
+    late IOHelper ioHelper;
     late ConcreteReporter reporter;
     late Map<String, dynamic> responseBody;
 
     setUp(() {
       memoryFileSystem = MemoryFileSystem();
-      fileSystem = IOFileSystem(fileSystem: memoryFileSystem);
-      reporter = ConcreteReporter(fileSystem);
+      ioHelper = IOHelper(fileSystem: memoryFileSystem);
+      reporter = ConcreteReporter(ioHelper);
 
       responseBody = {
         "id": "123",

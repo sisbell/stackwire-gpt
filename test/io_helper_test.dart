@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:file/memory.dart';
-import 'package:gpt/src/file_system.dart';
+import 'package:gpt/src/io_helper.dart';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
@@ -17,8 +17,8 @@ void main() {
     await sourceDir.childDirectory('subdir').create();
     await fileSystem.file('source/subdir/file3.txt').writeAsString('Subdir');
 
-    final io = IOFileSystem(fileSystem: fileSystem);
-    await io.copyDirectoryContents(sourceDir, destDir);
+    final ioHelper = IOHelper(fileSystem: fileSystem);
+    await ioHelper.copyDirectoryContents(sourceDir, destDir);
 
     expect(await destDir.exists(), true);
     expect(
@@ -32,12 +32,12 @@ void main() {
 
   test('copyDirectoryContents should copy an empty directory', () async {
     final fileSystem = MemoryFileSystem();
-    final customFileSystem = IOFileSystem(fileSystem: fileSystem);
+    final ioHelper = IOHelper(fileSystem: fileSystem);
     final srcDir = fileSystem.directory('src');
     final destDir = fileSystem.directory('dest');
     await srcDir.create();
     await destDir.create();
-    await customFileSystem.copyDirectoryContents(srcDir, destDir);
+    await ioHelper.copyDirectoryContents(srcDir, destDir);
 
     final destDirContents = destDir.listSync();
     expect(destDirContents.isEmpty, isTrue);
@@ -47,7 +47,7 @@ void main() {
       'copyDirectoryContents should copy a directory with files only (no subdirectories)',
       () async {
     final fileSystem = MemoryFileSystem();
-    final customFileSystem = IOFileSystem(fileSystem: fileSystem);
+    final ioHelper = IOHelper(fileSystem: fileSystem);
 
     final srcDir = fileSystem.directory('src');
     final destDir = fileSystem.directory('dest');
@@ -59,7 +59,7 @@ void main() {
     await file1.writeAsString('Content of file1.txt');
     await file2.writeAsString('Content of file2.txt');
 
-    await customFileSystem.copyDirectoryContents(srcDir, destDir);
+    await ioHelper.copyDirectoryContents(srcDir, destDir);
 
     final destFile1 = fileSystem.file(path.join(destDir.path, 'file1.txt'));
     final destFile2 = fileSystem.file(path.join(destDir.path, 'file2.txt'));
@@ -72,7 +72,7 @@ void main() {
 
   test('writeMap should write a JSON file from a map', () async {
     final fileSystem = MemoryFileSystem();
-    final customFileSystem = IOFileSystem(fileSystem: fileSystem);
+    final ioHelper = IOHelper(fileSystem: fileSystem);
 
     final testMap = {
       'key1': 'value1',
@@ -81,7 +81,7 @@ void main() {
 
     final filePath = 'test.json';
 
-    await customFileSystem.writeMap(testMap, filePath);
+    await ioHelper.writeMap(testMap, filePath);
 
     final file = fileSystem.file(filePath);
     expect(await file.exists(), isTrue);
@@ -91,7 +91,7 @@ void main() {
   test('writeMap should write a JSON file from a map with special characters',
       () async {
     final fileSystem = MemoryFileSystem();
-    final customFileSystem = IOFileSystem(fileSystem: fileSystem);
+    final ioHelper = IOHelper(fileSystem: fileSystem);
 
     final specialCharMap = {
       'key@1': 'value#1',
@@ -100,7 +100,7 @@ void main() {
 
     final filePath = 'special_chars.json';
 
-    await customFileSystem.writeMap(specialCharMap, filePath);
+    await ioHelper.writeMap(specialCharMap, filePath);
 
     final file = fileSystem.file(filePath);
     expect(await file.exists(), isTrue);
@@ -110,7 +110,7 @@ void main() {
   test('writeMap should write a JSON file from a map with different data types',
       () async {
     final fileSystem = MemoryFileSystem();
-    final customFileSystem = IOFileSystem(fileSystem: fileSystem);
+    final ioHelper = IOHelper(fileSystem: fileSystem);
 
     final multiTypeMap = {
       'key1': 'value1',
@@ -121,7 +121,7 @@ void main() {
     };
 
     final filePath = 'multi_types.json';
-    await customFileSystem.writeMap(multiTypeMap, filePath);
+    await ioHelper.writeMap(multiTypeMap, filePath);
 
     final file = fileSystem.file(filePath);
     expect(await file.exists(), isTrue);
