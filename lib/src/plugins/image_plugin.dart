@@ -1,7 +1,8 @@
 part of gpt_plugins;
 
 class ImageGptPlugin extends GptPlugin {
-  ImageGptPlugin(super.projectConfig, super.block, super.io);
+  ImageGptPlugin(super.projectConfig, super.block,
+      {super.fileSystem, super.networkClient});
 
   late String executionId;
 
@@ -20,9 +21,10 @@ class ImageGptPlugin extends GptPlugin {
   Future<void> init(execution, pluginConfiguration) async {
     executionId = execution["id"];
     imagePromptFile = execution["prompt"];
+    final promptTemplate = await ioHelper.readFileAsString(imagePromptFile);
     imagesDir = "$reportDir/images/$blockId";
-    createDirectoryIfNotExist(imagesDir);
-    imageRequests = await createImageRequest(execution);
+    await ioHelper.createDirectoryIfNotExist(imagesDir);
+    imageRequests = await createImageRequest(execution, promptTemplate);
   }
 
   @override
@@ -36,7 +38,6 @@ class ImageGptPlugin extends GptPlugin {
         "size": image["size"],
         "images": response["data"]
       };
-      print(response);
       results.add(result);
     }
   }
@@ -49,20 +50,19 @@ class ImageGptPlugin extends GptPlugin {
         final url = image["url"];
         if (url != null) {
           final imageName = getLastPathSegment(url);
-          downloadImage(url, "$imagesDir/$imageName");
+          networkClient.downloadImage(url, "$imagesDir/$imageName");
         }
         final b64 = image["b64_json"];
         if (b64 != null) {
           final imageName = DateTime.now().millisecond;
-          saveBase64AsPng(b64, "$imagesDir/$imageName.png");
+          networkClient.saveBase64AsPng(b64, "$imagesDir/$imageName.png");
         }
       }
     }
     print("Finished generating images");
   }
 
-  Future<List<dynamic>> createImageRequest(execution) async {
-    final promptTemplate = await io.readFileAsString(imagePromptFile);
+  Future<List<dynamic>> createImageRequest(execution, promptTemplate) async {
     final templateProperties = execution["properties"];
     final prompt =
         substituteTemplateProperties(promptTemplate, templateProperties);
@@ -90,18 +90,7 @@ class ImageGptPlugin extends GptPlugin {
     } else if (size == 1024) {
       return "1024x1024";
     } else {
-      throw Exception("Invalid image size: $size");
-    }
-  }
-
-  Future<void> downloadImage(String imageUrl, String savePath) async {
-    final response = await http.get(Uri.parse(imageUrl));
-    if (response.statusCode == 200) {
-      final bytes = response.bodyBytes;
-      final file = File(savePath);
-      await file.writeAsBytes(bytes);
-    } else {
-      throw Exception('Failed to download image: HTTP ${response.statusCode}');
+      throw ArgumentError("Invalid image size: $size", "execution.sizes");
     }
   }
 
@@ -112,13 +101,10 @@ class ImageGptPlugin extends GptPlugin {
 
   Future<Map<String, dynamic>> makeImageGenerationRequest(
       requestBody, executionId, tag, dryRun) async {
-    return sendHttpPostRequest(
-        requestBody, "v1/images/generations", executionId, tag, dryRun);
+    final toDirectory = "$blockDataDir/$currentBlockRun";
+    return networkClient.sendHttpPostRequest(
+        requestBody, "v1/images/generations", toDirectory,
+        dryRun: dryRun);
   }
 
-  Future<void> saveBase64AsPng(String base64String, String filePath) async {
-    Uint8List decodedBytes = base64Decode(base64String);
-    File file = File(filePath);
-    await file.writeAsBytes(decodedBytes);
-  }
 }

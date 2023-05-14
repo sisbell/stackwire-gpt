@@ -1,0 +1,48 @@
+---
+projectName: plugin-quickstart
+projectVersion: '1.0'
+projectType: plugin
+pluginServers:
+  - serverId: todo-json
+    # mocked requests
+    requests:
+      - path: "/todos/mike"
+        method: get
+        response: responses/todos-mike.json # returns the content of this file
+      - path: "/todos/global"
+        method: get
+        response: responses/todos-global.json
+      - path: "/todos/user"
+        method: get
+        response: responses/todos-global.json
+    resources:
+      logo: resources/logo.png
+      api: resources/openapi.yaml
+      manifest: resources/ai-plugin.json
+    configuration:
+      manifestPrompt: manifest.prompt # The prompt for plugin manifest
+      apiDescription: description.txt # The openapi description
+
+  # Changes content type to text, adds a different user for testing
+  - serverId: todo-text
+    requests:
+      - path: "/todos/kaleb"
+        method: get
+        contentType: text/plain
+        response: responses/todos-kaleb.text
+      - path: "/todos/global"
+        contentType: text/plain
+        method: get
+        response: responses/todos-global.text
+      - path: "/todos/user"
+        contentType: text/plain
+        method: get
+        response: responses/todos-global.text
+    resources:
+      logo: resources/logo.png
+      api: resources/openapi.yaml
+      manifest: resources/ai-plugin.json
+    configuration:
+      prompt: manifest.prompt
+      apiDescription: description.txt
+      showHttpHeaders: true # Show http headers in logs

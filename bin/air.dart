@@ -1,152 +1,26 @@
-import 'dart:convert';
-import 'dart:io';
 import 'dart:mirrors';
 
 import 'package:args/command_runner.dart';
-import 'package:gpt/src/archetypes.dart';
+import 'package:file/file.dart';
+import 'package:file/local.dart';
+import 'package:gpt/src/chatgpt/plugin_server.dart';
 import 'package:gpt/src/gpt_plugin.dart';
-import 'package:gpt/src/io/native_io.dart';
-import 'package:gpt/src/prompts.dart';
-import 'package:interact/interact.dart';
-import 'package:path/path.dart' as path;
-import 'package:yaml/yaml.dart';
+import 'package:gpt/src/io_helper.dart';
 
-final io = NativeIO();
+import 'archetype_command.dart';
+
+final localFileSystem = LocalFileSystem();
+
+final ioHelper = IOHelper(fileSystem: localFileSystem);
 
 void main(List<String> arguments) async {
   CommandRunner("air", "A command line tool for running GPT commands")
-    ..addCommand(RunCommand())
-    ..addCommand(CleanCommand())
     ..addCommand(ApiCountCommand())
     ..addCommand(ArchetypeCommand())
+    ..addCommand(CleanCommand())
+    ..addCommand(PluginServerCommand())
+    ..addCommand(RunCommand())
     ..run(arguments);
-}
-
-class ArchetypeCommand extends Command {
-  @override
-  String get description => "Generates a new project";
-
-  @override
-  String get name => "genp";
-
-  @override
-  void run() async {
-    final archetypeDirectory = await downloadArchetypeArchive();
-    final archetypeDirectories = {
-      "Chain": "chain",
-      "Prompt": "prompt",
-      "Batch": "batch",
-      "Image": "image"
-    };
-    final projectTypes = ['Prompt', 'Chain', 'Batch', 'Image'];
-    final selectedProjectIndex = Select(
-      prompt: 'Project Archetype',
-      options: projectTypes,
-      initialIndex: 0,
-    ).interact();
-    final projectName = Input(prompt: 'Project Name: ').interact();
-    final projectVersion =
-        Input(prompt: 'Project Version: ', defaultValue: "1.0").interact();
-    final projectSelection = projectTypes[selectedProjectIndex];
-    final archetypeName = archetypeDirectories[projectSelection];
-    final sourceDir = path.join(archetypeDirectory, archetypeName);
-    await io.copyDirectoryContents(
-        Directory(sourceDir), Directory(projectName));
-    Map<String, dynamic> templateProperties = {
-      "projectName": projectName,
-      "projectVersion": projectVersion
-    };
-
-    askImportKey(templateProperties, projectName);
-
-    if (selectedProjectIndex == 0) {
-      askBlockRuns(templateProperties);
-      askResponseFormat(templateProperties);
-    } else if (selectedProjectIndex == 1) {
-      //chain
-      askBlockRuns(templateProperties);
-      askFixJson(templateProperties);
-      templateProperties.addAll({"responseFormat": "json"});
-      askChainRuns(templateProperties);
-    } else if (selectedProjectIndex == 2) {
-      askBlockRuns(templateProperties);
-    } else if (selectedProjectIndex == 3) {
-      askImageDescription(templateProperties);
-    }
-
-    print(templateProperties);
-    final projectYaml = await readProjectYaml(projectName);
-    final calculatedProjectYaml =
-        substituteTemplateProperties(projectYaml, templateProperties);
-    await io.writeString(calculatedProjectYaml, "$projectName/project.yaml");
-
-    print("Created Project");
-  }
-
-  void askBlockRuns(templateProperties) {
-    final blockRuns =
-        Input(prompt: 'Number of Times to Run The Block: ').interact();
-    templateProperties.addAll({"blockRuns": blockRuns});
-  }
-
-  void askChainRuns(templateProperties) {
-    final blockRuns =
-        Input(prompt: 'Number of Times to Run The Prompt Chain: ').interact();
-    templateProperties.addAll({"chainRuns": blockRuns});
-  }
-
-  void askFixJson(templateProperties) {
-    final fixJSONConfirmation = Confirm(
-      prompt: 'Attempt to FIX JSON Responses?',
-      defaultValue: false,
-    ).interact();
-    templateProperties.addAll({"fixJson": fixJSONConfirmation.toString()});
-  }
-
-  void askImageDescription(templateProperties) {
-    final imageDescription = Input(prompt: 'Image Description: ').interact();
-    templateProperties.addAll({"imageDescription": imageDescription});
-  }
-
-  void askImportKey(templateProperties, projectName) {
-    final keyTypes = [
-      'Skip',
-      'Use Existing OpenAI API Key File',
-      'Create New OpenAI API Key File'
-    ];
-    final selectedKeyIndex = Select(
-      prompt: 'Import Key',
-      options: keyTypes,
-      initialIndex: 0,
-    ).interact();
-
-    if (selectedKeyIndex == 1) {
-      final keyFile = Input(prompt: 'API Key File: ').interact();
-      templateProperties.addAll({"apiKeyFile": keyFile});
-    } else if (selectedKeyIndex == 2) {
-      final key = Input(prompt: 'API Key: ').interact();
-      io.writeString(key, "$projectName/api_key");
-      templateProperties.addAll({"apiKeyFile": "api_key"});
-    }
-  }
-
-  void askResponseFormat(templateProperties) {
-    final outputTypes = ['JSON', 'TEXT'];
-    final selectedOutputIndex = Select(
-      prompt: 'Response Format',
-      options: outputTypes,
-      initialIndex: 1,
-    ).interact();
-    if (selectedOutputIndex == 0) {
-      templateProperties.addAll({"responseFormat": "json"});
-      templateProperties.addAll({"promptName": "prompt-json.prompt"});
-      askFixJson(templateProperties);
-    } else {
-      templateProperties.addAll({"responseFormat": "text"});
-      templateProperties.addAll({"promptName": "prompt-text.prompt"});
-      templateProperties.addAll({"fixJson": false.toString()});
-    }
-  }
 }
 
 class ApiCountCommand extends ProjectInitializeCommand {
@@ -207,7 +81,7 @@ class CleanCommand extends ProjectInitializeCommand {
   @override
   Future<void> run() async {
     await super.run();
-    Directory directory = Directory(outputDirName);
+    Directory directory = localFileSystem.directory(outputDirName);
     if (directory.existsSync()) {
       directory.deleteSync(recursive: true);
       print(
@@ -261,15 +135,60 @@ class RunCommand extends ProjectInitializeCommand {
   }
 }
 
+class PluginServerCommand extends Command {
+  @override
+  String get description => "Runs local version of ChatGPT Plugin";
+
+  @override
+  String get name => "plugin";
+
+  PluginServerCommand() {
+    argParser.addOption('serverId', abbr: 's');
+  }
+
+  @override
+  Future<void> run() async {
+    String projectFile = 'project.yaml';
+    final project = await ioHelper.readYamlFile(projectFile);
+    final pluginServers = project["pluginServers"];
+    final serverId = argResults?['serverId'];
+    final serverConfig = getPluginServerConfig(pluginServers, serverId);
+
+    final server = PluginServer();
+    await server.setup(serverConfig);
+    server.start();
+  }
+
+  Map<String, dynamic> getPluginServerConfig(servers, serverId) {
+    if (serverId != null) {
+      final server = getPluginServerById(servers, serverId);
+      if (server == null) {
+        throw ArgumentError("server not found: $serverId");
+      }
+      return server;
+    } else {
+      return servers[0];
+    }
+  }
+
+  Map<String, dynamic>? getPluginServerById(List<dynamic> array, String id) {
+    for (Map<String, dynamic> obj in array) {
+      if (obj["serverId"] == id) {
+        return obj;
+      }
+    }
+    return null;
+  }
+}
+
 GptPlugin getPlugin(block, projectConfig) {
   final pluginName = block["pluginName"];
   LibraryMirror libraryMirror =
       currentMirrorSystem().findLibrary(Symbol('gpt_plugins'));
   ClassMirror pluginMirror =
       libraryMirror.declarations[Symbol(pluginName)] as ClassMirror;
-  final gptPlugin =
-      pluginMirror.newInstance(Symbol(''), [projectConfig, block, io]).reflectee
-          as GptPlugin;
+  final gptPlugin = pluginMirror
+      .newInstance(Symbol(''), [projectConfig, block]).reflectee as GptPlugin;
   return gptPlugin;
 }
 
@@ -287,15 +206,15 @@ abstract class ProjectInitializeCommand extends Command {
   @override
   Future<void> run() async {
     String projectFile = 'project.yaml';
-    project = await readYamlFile(projectFile);
+    project = await ioHelper.readYamlFile(projectFile);
     final apiKeyFile = project['apiKeyFile'] ?? "api_key";
-    final apiKey = await io.readFileAsString(apiKeyFile);
+    final apiKey = await ioHelper.readFileAsString(apiKeyFile);
     outputDirName = project['outputDir'] ?? "output";
     final projectName = project["projectName"];
     final projectVersion = project["projectVersion"];
     reportDir = "$outputDirName/$projectName/$projectVersion";
     final dataDir = "$reportDir/data";
-    io.createDirectoryIfNotExist(dataDir);
+    await ioHelper.createDirectoryIfNotExist(dataDir);
 
     blocks = project["blocks"];
     projectConfig = {
@@ -306,16 +225,5 @@ abstract class ProjectInitializeCommand extends Command {
       "projectVersion": projectVersion,
       "reportDir": reportDir
     };
-  }
-
-  Future<Map<String, dynamic>> readJsonFile(String filePath) async {
-    String jsonString = await io.readFileAsString(filePath);
-    return jsonDecode(jsonString);
-  }
-
-  Future<Map<String, dynamic>> readYamlFile(String filePath) async {
-    String text = await io.readFileAsString(filePath);
-    final yamlObject = loadYaml(text);
-    return jsonDecode(json.encode(yamlObject));
   }
 }

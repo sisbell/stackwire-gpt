@@ -1,7 +1,8 @@
 part of gpt_plugins;
 
 class ExperimentGptPlugin extends GptPlugin {
-  ExperimentGptPlugin(super.projectConfig, super.block, super.io);
+  ExperimentGptPlugin(super.projectConfig, super.block,
+      {super.fileSystem, super.networkClient});
 
   late int chainRuns;
 
@@ -38,11 +39,12 @@ class ExperimentGptPlugin extends GptPlugin {
     fixJson = execution["fixJson"] ?? false;
     String? systemMessageFile = execution['systemMessageFile'];
     systemMessage = systemMessageFile != null
-        ? await io.readFileAsString(systemMessageFile)
+        ? await ioHelper.readFileAsString(systemMessageFile)
         : null;
     promptChain = execution['promptChain'];
-    List<Future<String>> futurePrompts =
-        promptChain.map((e) async => await io.readFileAsString(e)).toList();
+    List<Future<String>> futurePrompts = promptChain
+        .map((e) async => await ioHelper.readFileAsString(e))
+        .toList();
     promptTemplates = await Future.wait(futurePrompts);
     excludesMessageHistory = execution["excludesMessageHistory"] ?? [];
     final properties = execution['properties'] ?? {};
@@ -50,7 +52,7 @@ class ExperimentGptPlugin extends GptPlugin {
     final import = execution["import"];
     if (import != null) {
       final propertiesFile = import["propertiesFile"] ?? "properties.json";
-      final data = await readJsonFile(propertiesFile);
+      final data = await ioHelper.readJsonFile(propertiesFile);
       final props = import["properties"];
       final calculatedData = getFieldsForAllProperties(data, props);
       promptValues = {...calculatedData, ...properties};
@@ -106,7 +108,8 @@ class ExperimentGptPlugin extends GptPlugin {
         if (responseBody['errorCode'] != null) {
           results.add(createExperimentResult(
               "FAILURE", "Failed Request: ${responseBody['errorCode']}"));
-          throw Exception("Failed Request: ${responseBody['errorCode']}");
+          throw HttpException(
+              "Failed Request for Chat Completion: ${responseBody['errorCode']}");
         }
         results.add(createUserHistory(
             prompt, responseBody, promptFileName, promptValues, chainRun));
@@ -166,7 +169,9 @@ class ExperimentGptPlugin extends GptPlugin {
 
   Future<Map<String, dynamic>> makeChatCompletionRequest(
       requestBody, executionId, tag, dryRun) async {
-    return sendHttpPostRequest(
-        requestBody, "v1/chat/completions", executionId, tag, dryRun);
+    final toDirectory = "$blockDataDir/$currentBlockRun";
+    return networkClient.sendHttpPostRequest(
+        requestBody, "v1/chat/completions", toDirectory,
+        dryRun: dryRun);
   }
 }

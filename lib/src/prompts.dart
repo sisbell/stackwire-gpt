@@ -1,24 +1,24 @@
 import 'dart:convert';
 
-void _addJsonContentToPromptValues(jsonContent, promptValues) {
+void addJsonContentToPromptValues(jsonContent, promptValues) {
   try {
     final newValues = jsonDecode(jsonContent);
     promptValues.addAll(newValues);
   } catch (e) {
-    throw Exception("Malformed JSON. Failing Experiment.");
+    throw FormatException("Malformed JSON. Failing Experiment.", jsonContent);
   }
 }
 
 void addPromptValues(content, promptValues, fixJson) {
   try {
-    _addJsonContentToPromptValues(content, promptValues);
+    addJsonContentToPromptValues(content, promptValues);
   } catch (e) {
     if (!fixJson) {
       rethrow;
     }
-    final fixedJson = _extractJson(content);
+    final fixedJson = extractJson(content);
     if (fixedJson != null) {
-      _addJsonContentToPromptValues(fixedJson, promptValues);
+      addJsonContentToPromptValues(fixedJson, promptValues);
     } else {
       rethrow;
     }
@@ -34,18 +34,44 @@ String substituteTemplateProperties(String template, templateProperties) {
 }
 
 String createPromptByIndex(String template, templateProperties, index) {
-  String modifiedTemplate = template.replaceAllMapped(placeholderPattern,
-      (Match match) => templateProperties[match[1]][index] ?? "");
+  String modifiedTemplate =
+      template.replaceAllMapped(placeholderPattern, (Match match) {
+    if (templateProperties[match[1]] != null) {
+      if (index < templateProperties[match[1]].length) {
+        return templateProperties[match[1]][index] ?? "";
+      } else {
+        throw RangeError(
+            'Invalid prompt index: $index is out of range for the property ${match[1]}');
+      }
+    }
+    return "";
+  });
   return modifiedTemplate;
 }
 
-String? _extractJson(content) {
-  RegExp jsonPattern = RegExp(r'(\{.*?\})');
-  Match? jsonMatch = jsonPattern.firstMatch(content);
-  if (jsonMatch != null) {
-    return jsonMatch.group(1)!;
+String? extractJson(content) {
+  int bracketCount = 0;
+  int startIndex = -1;
+  int endIndex = -1;
+
+  for (int i = 0; i < content.length; i++) {
+    if (content[i] == '{') {
+      if (startIndex == -1) {
+        startIndex = i;
+      }
+      bracketCount++;
+    } else if (content[i] == '}') {
+      bracketCount--;
+      if (bracketCount == 0) {
+        endIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (startIndex != -1 && endIndex != -1) {
+    return content.substring(startIndex, endIndex + 1);
   } else {
-    print('No JSON string found in the input.');
     return null;
   }
 }

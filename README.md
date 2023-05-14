@@ -33,6 +33,7 @@ After installation, you can install the gpt program with the following command
 
 ## Usage
 The following are the use cases supported
+* [Generate ChatGPT Plugin](#generate-chatgpt-plugin)
 * [Generate Image Project](#generate-image-project)
 * [Generate Batch Project](#generate-batch-project)
 * [Generate Prompt Project](#generate-prompt-project)
@@ -46,11 +47,12 @@ air genp
 ```
 You will first need to select the archetype
 ```
-? Project Archetype ›
-❯ Prompt 
-  Chain 
-  Batch 
-  Image
+? Project Archetype ›                                                                                                                                                                                                                
+❯ Prompt                                                                                                                                                                                                                             
+  Chain                                                                                                                                                                                                                              
+  Batch                                                                                                                                                                                                                              
+  Image                                                                                                                                                                                                                              
+  ChatGPT Plugin  
 ```
 Enter the projectName and projectVersion
 ```
@@ -59,7 +61,7 @@ Enter the projectName and projectVersion
 ✔ Project Version:  · 1.0
 ```
 
-Next enter your API Key. You can skip, use an exsiting ket file or create a new key file
+Depending on the project, you may need to enter your API Key. You can skip, use an existing key file or create a new key file
 ```
 ? Import Key › 
 ❯ Skip      
@@ -73,6 +75,99 @@ just enter a few characters and then edit the file afterwards.
 ✔ Import Key · Create New OpenAI API Key File
 ? API Key:  › sk-gKtTxOumv4orO6cfWlh0ZK
 ```
+### Generate ChatGPT Plugin
+The ChatGPT Plugin project allows you to do rapid prototyping of a ChatGPT Plugin. Specifically it
+allows you to mock responses to ChatGPT. The project is based upon the quickstart project at: https://github.com/openai/plugins-quickstart
+
+Your project file will look like 
+
+```yaml
+---
+projectName: plugin-quickstart
+projectVersion: '1.0'
+projectType: plugin
+pluginServers:
+  - serverId: todo-json
+    # mocked requests
+    requests:
+      - path: "/todos/mike"
+        method: get
+        response: responses/todos-mike.json # returns the content of this file
+      - path: "/todos/global"
+        method: get
+        response: responses/todos-global.json
+      - path: "/todos/user"
+        method: get
+        response: responses/todos-global.json
+    resources:
+      logo: resources/logo.png
+      api: resources/openapi.yaml
+      manifest: resources/ai-plugin.json
+    configuration:
+      manifestPrompt: manifest.prompt # The prompt for plugin manifest
+      apiDescription: description.txt # The openapi description
+
+  # Changes content type to text, adds a different user for testing
+  - serverId: todo-text
+    requests:
+      - path: "/todos/kaleb"
+        method: get
+        contentType: text/plain
+        response: responses/todos-kaleb.text
+      - path: "/todos/global"
+        contentType: text/plain
+        method: get
+        response: responses/todos-global.text
+      - path: "/todos/user"
+        contentType: text/plain
+        method: get
+        response: responses/todos-global.text
+    resources:
+      logo: resources/logo.png
+      api: resources/openapi.yaml
+      manifest: resources/ai-plugin.json
+    configuration:
+      prompt: manifest.prompt
+      apiDescription: description.txt
+      showHttpHeaders: true # Show http headers in logs
+
+```
+The contents of the _manifest.prompt_ file will be substituted into the 
+_description_for_model_ field of the plugin manifest.
+```
+A plugin that allows the user to create and manage a TODO list using ChatGPT.
+If you do not know the user's username, ask them first before making queries to the plugin.
+Otherwise, use the username global.
+```
+The _description.txt_ file will be substituted into the _info.description_ field of _resources/openapi.yaml_ file
+
+```
+A plugin that allows the user to create and manage a TODO list using ChatGPT.
+```
+A sample mocked response (_responses/todos-mike.json_) is given below. This will be returned on a call to **/todos/mike**
+
+```json
+{
+  "todos": [
+    "Clean out a septic tank",
+    "Repair a broken sewer pipe",
+    "Collect roadkill for disposal",
+    "Assist in bee hive relocation",
+    "Service a grease trap at a restaurant"
+  ]
+}
+```
+To start a mocked instance of the plugin server
+```
+air plugin
+```
+or to start a specific server add the _serverId_ option
+
+```
+air plugin --serverId todo-text
+```
+For more information about creating and using a 
+[ChatGPT-Plugin](https://github.com/sisbell/stackwire-gpt/wiki/ChatGPT-Plugin)
 
 ### Generate Image Project
 If you chose to create an image project, you will be asked for a description.
@@ -390,10 +485,11 @@ Global options:
 -h, --help    Print this usage information.
 
 Available commands:
-  clean   Cleans project's output directory
-  count   Returns the number of OpenApiCalls that would be made
-  genp    Generates a new project
-  run     Runs a project's blocks
+  clean    Cleans project's output directory
+  count    Returns the number of OpenApiCalls that would be made
+  genp     Generates a new project
+  plugin   Runs local version of ChatGPT Plugin
+  run      Runs a project's blocks
 
 Run "air help <command>" for more information about a command.
 
