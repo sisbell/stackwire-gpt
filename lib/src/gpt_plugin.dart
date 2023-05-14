@@ -57,7 +57,7 @@ abstract class GptPlugin {
     reporter = ConcreteReporter(ioHelper);
     final apiKey = _projectConfig["apiKey"];
     this.networkClient =
-        networkClient ?? NetworkClient(apiKey, reporter, fileSystem!, Client());
+        networkClient ?? NetworkClient(apiKey, reporter, this.fileSystem, Client());
   }
 
   num apiCallCount() {

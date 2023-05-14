@@ -48,18 +48,19 @@ class NetworkClient {
         print(
             '\t\tOpenAI Request failed with status code: ${response.statusCode}');
         print(requestBodyStr);
-        await reporter.logFailedRequest(requestBody, logDir);
+        await reporter.logFailedRequest(requestBodyStr, logDir);
         return {"errorCode": response.statusCode};
       }
       Map<String, dynamic> responseBody = jsonDecode(response.body);
       responseBody.addAll({"requestTime": (endTime - startTime)});
-      await reporter.logRequestAndResponse(requestBody, responseBody, logDir);
+      await reporter.logRequestAndResponse(
+          requestBodyStr, responseBody, logDir);
       //writeMetrics(responseBody, executionId, tag);
       return responseBody;
     } catch (e) {
-      print('Error occurred during the request: $e');
+      throw HttpException('Error occurred during the request: $e',
+          uri: Uri.parse("https://api.openai.com/$urlPath"));
     }
-    return {};
   }
 
   Future<void> downloadImage(String imageUrl, String savePath) async {
