@@ -15,15 +15,17 @@ void main() {
         () async {
       FileSystem fileSystem = MemoryFileSystem.test();
       final builder = ArchetypeBuilder(fileSystem);
-      final directoryPaths = await builder.getDirectoryPaths();
+      final directoryPaths = await builder.getDirectoryPaths("2");
       final String homeDir =
           Platform.environment['HOME'] ?? Platform.environment['USERPROFILE']!;
       final String expectedStackwireDirPath = path.join(homeDir, '.stackwire');
       final String expectedArchetypesDirPath =
-          path.join(expectedStackwireDirPath, 'archetypes');
+          path.join(expectedStackwireDirPath, 'cache/archetypes-2');
 
-      expect(directoryPaths['stackwireDirPath'], expectedStackwireDirPath);
-      expect(directoryPaths['archetypesDirPath'], expectedArchetypesDirPath);
+      expect(
+          directoryPaths['stackwireDirectoryPath'], expectedStackwireDirPath);
+      expect(
+          directoryPaths['archetypesDirectoryPath'], expectedArchetypesDirPath);
     });
   });
 
@@ -59,7 +61,7 @@ void main() {
       expect(await stackwireDir.exists(), true);
 
       final extractedPath =
-          (await builder.getDirectoryPaths())["archetypesDirPath"];
+          (await builder.getDirectoryPaths("2"))["archetypesDirectoryPath"];
       expect(archetypesDirPath, extractedPath);
     });
 

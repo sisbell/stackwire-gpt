@@ -8,34 +8,43 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
+import 'io_helper.dart';
 
 class ArchetypeBuilder {
+  final String archetypeVersion = "2";
+
   final FileSystem fileSystem;
 
   ArchetypeBuilder(this.fileSystem);
 
   Future<String> downloadArchetypeArchive({http.Client? client}) async {
+    final ioHelper = IOHelper(fileSystem: fileSystem);
     client ??= http.Client();
+    final archetypeFileName = "archetypes-$archetypeVersion.zip";
+    Directory? archetypesDirectory;
     try {
-      final Map<String, String> directoryPaths = await getDirectoryPaths();
-      final String stackwireDirPath = directoryPaths['stackwireDirPath']!;
-      final String archetypesDirPath = directoryPaths['archetypesDirPath']!;
-      final stackwireDir = fileSystem.directory(stackwireDirPath);
+      final Map<String, String> paths =
+          await getDirectoryPaths(archetypeVersion);
+      final String stackwireDirectoryPath = paths['stackwireDirectoryPath']!;
+      final String archetypesDirectoryPath = paths['archetypesDirectoryPath']!;
+      final stackwireDirectory = fileSystem.directory(stackwireDirectoryPath);
+      archetypesDirectory = fileSystem.directory(archetypesDirectoryPath);
 
-      if (await stackwireDir.exists()) {
-        print("Archive directory found: $archetypesDirPath");
-        return archetypesDirPath;
+      if (await archetypesDirectory.exists()) {
+        print("Archetypes file found at: $archetypesDirectoryPath");
+        return archetypesDirectoryPath;
       }
-      print(stackwireDir);
-      print("Downloading archetype archive...");
-      stackwireDir.createSync(recursive: true);
+      ioHelper.createDirectoryIfNotExist(archetypesDirectoryPath);
+      print(stackwireDirectory);
+      archetypesDirectory.createSync(recursive: true);
       final String zipUrl =
-          'https://firebasestorage.googleapis.com/v0/b/stantrek-prod.appspot.com/o/stackwire%2Farchetypes.zip?alt=media&token=10bdbb6f-e11d-446e-ab34-e42d4642b5f7';
+          'https://storage.googleapis.com/stantrek-prod.appspot.com/stackwire/$archetypeFileName';
+      print("Downloading $zipUrl");
       final http.Response response = await client.get(Uri.parse(zipUrl));
       List<int> bytes = response.bodyBytes;
       final Archive archive = ZipDecoder().decodeBytes(bytes);
       for (final file in archive) {
-        final String filename = path.join(stackwireDirPath, file.name);
+        final String filename = path.join(archetypesDirectoryPath, file.name);
         if (file.isFile) {
           final data = file.content as List<int>;
           fileSystem.file(filename)
@@ -45,22 +54,26 @@ class ArchetypeBuilder {
           fileSystem.directory(filename).createSync();
         }
       }
-
-      print('Zip file extracted to $archetypesDirPath');
-      return archetypesDirPath;
+      print('Zip file extracted to $archetypesDirectoryPath');
+      return archetypesDirectoryPath;
     } catch (e) {
-      throw ArchiveDownloadException('Failed to download and extract archive: $e');
+      if (archetypesDirectory != null) {
+        archetypesDirectory.deleteSync();
+      }
+      throw ArchiveDownloadException(
+          'Failed to download and extract archive: $e');
     }
   }
 
-  Future<Map<String, String>> getDirectoryPaths() async {
+  Future<Map<String, String>> getDirectoryPaths(archetypeVersion) async {
     final String homeDir =
         Platform.environment['HOME'] ?? Platform.environment['USERPROFILE']!;
     final String stackwireDirPath = path.join(homeDir, '.stackwire');
-    final String archetypesDirPath = path.join(stackwireDirPath, 'archetypes');
+    final String archetypesDirPath =
+        path.join(stackwireDirPath, 'cache', 'archetypes-$archetypeVersion');
     return {
-      'stackwireDirPath': stackwireDirPath,
-      'archetypesDirPath': archetypesDirPath,
+      'stackwireDirectoryPath': stackwireDirPath,
+      'archetypesDirectoryPath': archetypesDirPath,
     };
   }
 
@@ -97,5 +110,3 @@ class ArchiveDownloadException implements Exception {
   @override
   String toString() => 'ArchiveDownloadException: $message';
 }
-
-
