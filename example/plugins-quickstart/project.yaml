@@ -1,0 +1,44 @@
+---
+projectName: plugin-quickstart
+projectVersion: '1.0'
+projectType: plugin
+pluginServers:
+  - serverId: todo-json
+    requests:
+      - path: "/todos/mike"
+        method: get
+        response: responses/todos-mike.json
+      - path: "/todos/global"
+        method: get
+        response: responses/todos-global.json
+      - path: "/todos/user"
+        method: get
+        response: responses/todos-global.json
+    resources:
+      logo: resources/logo.png
+      openapi: resources/openapi.yaml
+      aiPlugin: resources/ai-plugin.json
+    configuration:
+      prompt: description.prompt
+      showHttpHeaders: false
+
+  - serverId: todo-text
+    requests:
+      - path: "/todos/kaleb"
+        method: get
+        contentType: text/plain
+        response: responses/todos-kaleb.text
+      - path: "/todos/global"
+        contentType: text/plain
+        method: get
+        response: responses/todos-global.text
+      - path: "/todos/user"
+        contentType: text/plain
+        method: get
+        response: responses/todos-global.text
+    resources:
+      logo: resources/logo.png
+      openapi: resources/openapi.yaml
+      aiPlugin: resources/ai-plugin.json
+    configuration:
+      prompt: description.prompt

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:file/file.dart';
 import 'package:path/path.dart' as path;
+import 'package:yaml/yaml.dart';
 
 class IOHelper {
   final FileSystem fileSystem;
@@ -38,6 +39,12 @@ class IOHelper {
   Future<Map<String, dynamic>> readJsonFile(String filePath) async {
     String jsonString = await readFileAsString(filePath);
     return jsonDecode(jsonString);
+  }
+
+  Future<Map<String, dynamic>> readYamlFile(String filePath) async {
+    String text = await readFileAsString(filePath);
+    final yamlObject = loadYaml(text);
+    return jsonDecode(json.encode(yamlObject));
   }
 
   Future<void> writeMap(Map<String, dynamic> data, String filePath) async {
