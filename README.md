@@ -1,14 +1,11 @@
-A command line tool for running GPT commands. This tool supports prompt-batching and prompt-chaining.
-
-> Currently only chat completion and image generation APIs are supported.
-
-This is the tool I use for refining the StanTrek and StanQuest games. It demonstrates some of the techniques I use for the game.
+A command line tool for running GPT commands. This tool supports prompt-batching, prompt-chaining and ChatGPT Plugins.
 
 ## Features
 Use this tool to
 * Create **batch** processing of GPT requests. Run a set of data against a prompt and record the responses.
 * Create **experiments** to see how different config parameters and prompts affect performance and output.
 * Create **images** with DALL-E
+* Do rapid prototyping of **ChatGPT Plugins** through a mock server
 
 ## Getting Started
 You will need to create an OpenAI API Key. If you have an account, you can create a key here
