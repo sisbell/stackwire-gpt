@@ -25,9 +25,10 @@ class ArchetypeCommand extends Command {
       "Chain": "chain",
       "Prompt": "prompt",
       "Batch": "batch",
-      "Image": "image"
+      "Image": "image",
+      "ChatGPT Plugin": "plugins-quickstart"
     };
-    final projectTypes = ['Prompt', 'Chain', 'Batch', 'Image'];
+    final projectTypes = ['Prompt', 'Chain', 'Batch', 'Image', 'ChatGPT Plugin'];
     final selectedProjectIndex = Select(
       prompt: 'Project Archetype',
       options: projectTypes,
@@ -47,23 +48,23 @@ class ArchetypeCommand extends Command {
       "projectVersion": projectVersion
     };
 
-    askImportKey(templateProperties, projectName);
-
-    if (selectedProjectIndex == 0) {
+    if (selectedProjectIndex == 0) {//prompt
+      askImportKey(templateProperties, projectName);
       askBlockRuns(templateProperties);
       askResponseFormat(templateProperties);
-    } else if (selectedProjectIndex == 1) {
-      //chain
+    } else if (selectedProjectIndex == 1) {//chain
+      askImportKey(templateProperties, projectName);
       askBlockRuns(templateProperties);
       askFixJson(templateProperties);
       templateProperties.addAll({"responseFormat": "json"});
       askChainRuns(templateProperties);
-    } else if (selectedProjectIndex == 2) {
+    } else if (selectedProjectIndex == 2) {//batch
+      askImportKey(templateProperties, projectName);
       askBlockRuns(templateProperties);
-    } else if (selectedProjectIndex == 3) {
+    } else if (selectedProjectIndex == 3) {//image
+      askImportKey(templateProperties, projectName);
       askImageDescription(templateProperties);
     }
-
     print(templateProperties);
     final projectYaml = await builder.readProjectYaml(projectName);
     final calculatedProjectYaml =

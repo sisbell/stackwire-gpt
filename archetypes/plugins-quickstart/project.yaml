@@ -1,6 +1,6 @@
 ---
-projectName: plugin-quickstart
-projectVersion: '1.0'
+projectName: "${projectName}"
+projectVersion: "${projectVersion}"
 projectType: plugin
 pluginServers:
   - serverId: todo-json

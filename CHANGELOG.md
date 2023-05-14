@@ -1,7 +1,11 @@
+## 0.10.0
+- ChatGPT Plugin Support [#61](https://github.com/sisbell/stackwire-gpt/issues/61)
+- Extracting JSON Response fails for Nested JSON [#55](https://github.com/sisbell/stackwire-gpt/issues/55)
+- Minor bug fixes
 ## 0.9.1
-Download Archetype Archive for Project Generation [#51](https://github.com/sisbell/stackwire-gpt/issues/51)
+- Download Archetype Archive for Project Generation [#51](https://github.com/sisbell/stackwire-gpt/issues/51)
 ## 0.9.0
-CLI Support for Generating Projects [#11](https://github.com/sisbell/stackwire-gpt/issues/11)
+- CLI Support for Generating Projects [#11](https://github.com/sisbell/stackwire-gpt/issues/11)
 ## 0.8.0
 - Reporting Plugin for HTML Output [#48](https://github.com/sisbell/stackwire-gpt/issues/48)
 ## 0.7.0

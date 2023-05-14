@@ -8,15 +8,17 @@ import '../io_helper.dart';
 import '../prompts.dart';
 
 class PluginServer {
-  late File aiPluginFile;
+  late File manifestFile;
 
   late File logoFile;
 
   late String logoName;
 
-  late File openapiFile;
+  late File apiFile;
 
   late int port;
+
+  String? descriptionFileName;
 
   String? promptFileName;
 
@@ -27,33 +29,33 @@ class PluginServer {
   late bool showHttpHeaders;
 
   Future<void> setup(serverConfig) async {
-    print(serverConfig);
     final serverId = serverConfig["serverId"];
     final configuration = serverConfig["configuration"];
     final requests = serverConfig["requests"];
     final resources = serverConfig["resources"];
 
-    aiPluginFile = File(resources["aiPlugin"]);
-    final aiPlugin = await ioHelper.readJsonFile(aiPluginFile.path);
-    final openapiUrl = aiPlugin["api"]["url"];
-    final logo = aiPlugin["logo_url"];
+    manifestFile = File(resources["manifest"]);
+    final manifest = await ioHelper.readJsonFile(manifestFile.path);
+    final apiUrl = manifest["api"]["url"];
+    final logo = manifest["logo_url"];
     final logoUri = Uri.parse(logo);
     logoName = logoUri.pathSegments.last;
     logoFile = File(resources["logo"]);
 
-    openapiFile = File(resources["openapi"]);
-    final openapi = await ioHelper.readYamlFile(openapiFile.path);
-    final serverUri = openapi["servers"][0]["url"];
+    apiFile = File(resources["api"]);
+    final api = await ioHelper.readYamlFile(apiFile.path);
+    final serverUri = api["servers"][0]["url"];
     final uri = Uri.parse(serverUri);
     port = uri.port;
 
-    promptFileName = configuration["prompt"];
+    promptFileName = configuration["manifestPrompt"];
+    descriptionFileName = configuration["apiDescription"];
     showHttpHeaders = configuration["showHttpHeaders"] ?? false;
 
     print("Setting up plugin server: $serverId");
     print(serverUri);
     print("$serverUri/.well-known/ai-plugin.json");
-    print(openapiUrl);
+    print(apiUrl);
     print(logo);
     print("\nRegistering endpoints");
     requestConfigs = requests
@@ -81,31 +83,19 @@ class PluginServer {
     }
   }
 
-  void writeImage(request, imageFile) {
-    var extensionWithDot = path.extension(imageFile.path);
-    var extensionWithoutDot =
-        extensionWithDot.isNotEmpty ? extensionWithDot.substring(1) : '';
-    request.response.headers.contentType =
-        ContentType('image', extensionWithoutDot);
-    imageFile.openRead().pipe(request.response).catchError((e) {
-      print('Error occurred while reading image: $e');
-    });
-  }
-
-  void writeString(request, contentFile, contentType) {
-    request.response.headers.contentType = contentType;
-    contentFile.openRead().pipe(request.response).catchError((e) {
-      print('Error occurred: $e');
-    });
-  }
-
   Future<Map<String, dynamic>> getProperties() async {
+    final properties = <String, dynamic>{};
     if (promptFileName != null) {
-      final prompt = await ioHelper.readFileAsString(promptFileName!);
-      final newPrompt = prompt.replaceAll('\n', '').replaceAll('\r', '');
-      return {"prompt": newPrompt};
+      final content = await ioHelper.readFileAsString(promptFileName!);
+      final newContent = content.replaceAll('\n', '').replaceAll('\r', '');
+      properties.addAll({"manifestPrompt": newContent});
     }
-    return {};
+    if(descriptionFileName != null) {
+      final content = await ioHelper.readFileAsString(descriptionFileName!);
+      final newContent = content.replaceAll('\n', '').replaceAll('\r', '');
+      properties.addAll({"apiDescription": newContent});
+    }
+    return properties;
   }
 
   void handleRequest(HttpRequest request) async {
@@ -128,17 +118,11 @@ class PluginServer {
       print(body);
     }
     if (path.endsWith(logoName)) {
-      writeImage(request, logoFile);
+      writeLogo(request);
     } else if (path.endsWith("openapi.yaml")) {
-      final yamlTemplate = await ioHelper.readFileAsString(openapiFile.path);
-      final properties = await getProperties();
-      final content = substituteTemplateProperties(yamlTemplate, properties);
-      request.response
-        ..headers.contentType = ContentType("text", "yaml")
-        ..write(content)
-        ..close();
+      await writeTemplate(request, apiFile, ContentType("text", "yaml"));
     } else if (path.endsWith("ai-plugin.json")) {
-      writeString(request, aiPluginFile, ContentType("application", "json"));
+      await writeTemplate(request, manifestFile, ContentType("application", "json"));
     } else {
       final config = getRequestConfig(request);
       if (config != null) {
@@ -160,6 +144,34 @@ class PluginServer {
           ..close();
       }
     }
+  }
+
+  void writeLogo(request) {
+    var extensionWithDot = path.extension(logoFile.path);
+    var extensionWithoutDot =
+    extensionWithDot.isNotEmpty ? extensionWithDot.substring(1) : '';
+    request.response.headers.contentType =
+        ContentType('image', extensionWithoutDot);
+    logoFile.openRead().pipe(request.response).catchError((e) {
+      print('Error occurred while reading image: $e');
+    });
+  }
+
+  void writeString(request, contentFile, contentType) {
+    request.response.headers.contentType = contentType;
+    contentFile.openRead().pipe(request.response).catchError((e) {
+      print('Error occurred: $e');
+    });
+  }
+
+  Future<void> writeTemplate(request, templateFile, contentType) async {
+    final template = await ioHelper.readFileAsString(templateFile.path);
+    final properties = await getProperties();
+    final content = substituteTemplateProperties(template, properties);
+    request.response
+      ..headers.contentType = contentType
+      ..write(content)
+      ..close();
   }
 
   RequestConfig? getRequestConfig(HttpRequest request) {
