@@ -90,7 +90,7 @@ class PluginServer {
       final newContent = content.replaceAll('\n', '').replaceAll('\r', '');
       properties.addAll({"manifestPrompt": newContent});
     }
-    if(descriptionFileName != null) {
+    if (descriptionFileName != null) {
       final content = await ioHelper.readFileAsString(descriptionFileName!);
       final newContent = content.replaceAll('\n', '').replaceAll('\r', '');
       properties.addAll({"apiDescription": newContent});
@@ -122,16 +122,15 @@ class PluginServer {
     } else if (path.endsWith("openapi.yaml")) {
       await writeTemplate(request, apiFile, ContentType("text", "yaml"));
     } else if (path.endsWith("ai-plugin.json")) {
-      await writeTemplate(request, manifestFile, ContentType("application", "json"));
+      await writeTemplate(
+          request, manifestFile, ContentType("application", "json"));
     } else {
       final config = getRequestConfig(request);
       if (config != null) {
         var file = File(config.response);
         if (file.existsSync()) {
           print("\tUsing response file ${file.path}");
-          final contentType = config.contentType == "application/json"
-              ? ContentType.json
-              : ContentType.text;
+          final contentType = ContentType.parse(config.contentType);
           request.response
             ..headers.contentType = contentType
             ..add(file.readAsBytesSync())
@@ -149,7 +148,7 @@ class PluginServer {
   void writeLogo(request) {
     var extensionWithDot = path.extension(logoFile.path);
     var extensionWithoutDot =
-    extensionWithDot.isNotEmpty ? extensionWithDot.substring(1) : '';
+        extensionWithDot.isNotEmpty ? extensionWithDot.substring(1) : '';
     request.response.headers.contentType =
         ContentType('image', extensionWithoutDot);
     logoFile.openRead().pipe(request.response).catchError((e) {
