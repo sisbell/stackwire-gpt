@@ -211,7 +211,7 @@ void main() {
     test('should return the original template if there are no placeholders',
         () {
       final template = 'Hello Alice, welcome to Wonderland';
-      final templateProperties = {};
+      final templateProperties = <String, dynamic>{};
 
       final result = substituteTemplateProperties(template, templateProperties);
 

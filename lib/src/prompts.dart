@@ -27,9 +27,9 @@ void addPromptValues(content, promptValues, fixJson) {
 
 RegExp placeholderPattern = RegExp(r'\$\{([^\}]+)\}');
 
-String substituteTemplateProperties(String template, templateProperties) {
+String substituteTemplateProperties(String template, Map<String, dynamic> templateProperties) {
   String modifiedTemplate = template.replaceAllMapped(
-      placeholderPattern, (Match match) => templateProperties[match[1]] ?? "");
+      placeholderPattern, (Match match) => (templateProperties[match[1]] ?? "").toString());
   return modifiedTemplate;
 }
 

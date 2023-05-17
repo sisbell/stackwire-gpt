@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:file/file.dart';
 import 'package:file/memory.dart';
 import 'package:gpt/src/io_helper.dart';
 import 'package:path/path.dart' as path;
@@ -127,4 +128,61 @@ void main() {
     expect(await file.exists(), isTrue);
     expect(jsonDecode(await file.readAsString()), equals(multiTypeMap));
   });
+
+  late FileSystem fs;
+  late IOHelper ioHelper;
+
+  setUp(() {
+    fs = MemoryFileSystem();
+    ioHelper = IOHelper(fileSystem: fs);
+  });
+
+  group('IOHelper', () {
+    test('finds file in the first directory when dir1 is not null', () async {
+      var dir1 = '/dir1';
+      var dir2 = '/dir2';
+      var fileName = 'testFile1.txt';
+      var file1 = fs.directory(dir1).childFile(fileName);
+
+      fs.directory(dir1).createSync();
+      file1.writeAsStringSync('Test content');
+      expect((await ioHelper.findFile(dir1, dir2, fileName)).path, file1.path);
+    });
+
+    test('finds file in the second directory when dir1 is null', () async {
+      var dir2 = '/dir2';
+      var fileName = 'testFile2.txt';
+      var file2 = fs.directory(dir2).childFile(fileName);
+
+      fs.directory(dir2).createSync();
+      file2.writeAsStringSync('Test content');
+      expect((await ioHelper.findFile(null, dir2, fileName)).path, file2.path);
+    });
+
+    test('finds file in the second directory when dir1 does not exist', () async {
+      var dir1 = '/nonExistentDirectory';
+      var dir2 = '/dir2';
+      var fileName = 'testFile2.txt';
+      var file2 = fs.directory(dir2).childFile(fileName);
+
+      fs.directory(dir2).createSync();
+      file2.writeAsStringSync('Test content');
+
+      expect((await ioHelper.findFile(dir1, dir2, fileName)).path, file2.path);
+    });
+
+    test('throws when file is not found in both directories', () async {
+      var dir1 = '/dir1';
+      var dir2 = '/dir2';
+      var fileName = 'nonExistentFile.txt';
+
+      fs.directory(dir1).createSync();
+      fs.directory(dir2).createSync();
+
+      expect(ioHelper.findFile(dir1, dir2, fileName), throwsA(isA<FileSystemException>()));
+    });
+  });
+
 }
+
+

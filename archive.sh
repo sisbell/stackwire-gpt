@@ -1,3 +1,3 @@
 mkdir build
 cd archetypes
-zip -r ../build/archetypes-2.zip *
+zip -r ../build/archetypes-3.zip *

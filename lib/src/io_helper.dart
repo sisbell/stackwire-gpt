@@ -13,6 +13,23 @@ class IOHelper {
     return fileSystem.file(path);
   }
 
+  Future<File> findFile(String? dir1, String dir2, String fileName) async {
+    if (dir1 != null) {
+      var file1 = fileSystem.directory(dir1).childFile(fileName);
+      if (await file1.exists()) {
+        return file1;
+      }
+    }
+
+    var file2 = fileSystem.directory(dir2).childFile(fileName);
+
+    if (await file2.exists()) {
+      return file2;
+    } else {
+      throw FileSystemException('File not found: $fileName');
+    }
+  }
+
   Future<void> createDirectoryIfNotExist(String path) async {
     final dir = fileSystem.directory(path);
     if (!await dir.exists()) {
@@ -44,6 +61,11 @@ class IOHelper {
   Future<Map<String, dynamic>> readYamlFile(String filePath) async {
     String text = await readFileAsString(filePath);
     final yamlObject = loadYaml(text);
+    return jsonDecode(json.encode(yamlObject));
+  }
+
+  Future<Map<String, dynamic>> readYaml(String content) async {
+    final yamlObject = loadYaml(content);
     return jsonDecode(json.encode(yamlObject));
   }
 

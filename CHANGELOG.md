@@ -1,3 +1,6 @@
+## 0.11.0
+- Allow Plugin Servers to Inherit Properties [#66](https://github.com/sisbell/stackwire-gpt/issues/66)
+- Plugin Server Variant Support [#67](https://github.com/sisbell/stackwire-gpt/issues/67)
 ## 0.10.0
 - ChatGPT Plugin Support [#61](https://github.com/sisbell/stackwire-gpt/issues/61)
 - Extracting JSON Response fails for Nested JSON [#55](https://github.com/sisbell/stackwire-gpt/issues/55)

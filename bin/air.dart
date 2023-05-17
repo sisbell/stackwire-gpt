@@ -150,12 +150,13 @@ class PluginServerCommand extends Command {
   Future<void> run() async {
     String projectFile = 'project.yaml';
     final project = await ioHelper.readYamlFile(projectFile);
+    final defaultConfig = project["defaultConfig"];
     final pluginServers = project["pluginServers"];
     final serverId = argResults?['serverId'];
     final serverConfig = getPluginServerConfig(pluginServers, serverId);
 
-    final server = PluginServer();
-    await server.setup(serverConfig);
+    final server = PluginServer(LocalFileSystem());
+    await server.setup(defaultConfig, serverConfig);
     server.start();
   }
 
