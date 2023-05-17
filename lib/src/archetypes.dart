@@ -11,7 +11,7 @@ import 'package:yaml/yaml.dart';
 import 'io_helper.dart';
 
 class ArchetypeBuilder {
-  final String archetypeVersion = "2";
+  final String archetypeVersion = "3";
 
   final FileSystem fileSystem;
 
