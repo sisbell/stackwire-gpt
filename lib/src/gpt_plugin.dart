@@ -19,7 +19,7 @@ part "plugins/image_plugin.dart";
 part "plugins/reporting_plugin.dart";
 
 abstract class GptPlugin {
-  Map<String, dynamic> _projectConfig;
+  final Map<String, dynamic> _projectConfig;
   Map<String, dynamic> block;
   late FileSystem fileSystem;
   late NetworkClient networkClient;
