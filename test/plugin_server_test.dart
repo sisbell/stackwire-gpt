@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:file/memory.dart';
 import 'package:gpt/src/chatgpt/plugin_server.dart';
 import 'package:test/test.dart';
-import 'package:http/http.dart' as http;
 
 void main() {
   test(

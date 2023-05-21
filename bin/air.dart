@@ -93,7 +93,7 @@ class CleanCommand extends ProjectInitializeCommand {
   @override
   String get name => "clean";
 
-  CleanCommand() {}
+  CleanCommand();
 
   @override
   Future<void> run() async {
