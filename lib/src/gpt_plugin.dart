@@ -39,8 +39,7 @@ abstract class GptPlugin {
   late IOHelper ioHelper;
 
   GptPlugin(this._projectConfig, this.block,
-      {FileSystem? fileSystem,
-      NetworkClient? networkClient}) {
+      {FileSystem? fileSystem, NetworkClient? networkClient}) {
     this.fileSystem = fileSystem ?? LocalFileSystem();
 
     outputDir = _projectConfig["outputDir"];
@@ -56,8 +55,8 @@ abstract class GptPlugin {
     ioHelper = IOHelper(fileSystem: this.fileSystem);
     reporter = ConcreteReporter(ioHelper);
     final apiKey = _projectConfig["apiKey"];
-    this.networkClient =
-        networkClient ?? NetworkClient(apiKey, reporter, this.fileSystem, Client());
+    this.networkClient = networkClient ??
+        NetworkClient(apiKey, reporter, this.fileSystem, Client());
   }
 
   num apiCallCount() {

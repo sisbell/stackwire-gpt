@@ -1,0 +1,33 @@
+openapi: 3.0.0
+info:
+  title: My API
+  version: 1.0.0
+  description: A Plugin for discovering ChatGPT Plugins.
+servers:
+  - url: http://localhost:${port}
+paths:
+  /catalog:
+    get:
+      operationId: getPluginInfo
+      summary: Get the plugin catalog
+      responses:
+        '200':
+          description: A list of Plugins in the catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      description: The name of the plugin
+                      type: string
+                    description:
+                      description: A description of the plugin
+                      type: string
+                    logo:
+                      description: The plugin logo
+                      type: string

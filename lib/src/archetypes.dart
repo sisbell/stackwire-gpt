@@ -11,7 +11,7 @@ import 'package:yaml/yaml.dart';
 import 'io_helper.dart';
 
 class ArchetypeBuilder {
-  final String archetypeVersion = "3";
+  final String archetypeVersion = "4";
 
   final FileSystem fileSystem;
 
@@ -38,7 +38,7 @@ class ArchetypeBuilder {
       print(stackwireDirectory);
       archetypesDirectory.createSync(recursive: true);
       final String zipUrl =
-          'https://storage.googleapis.com/stantrek-prod.appspot.com/stackwire/$archetypeFileName';
+          'https://storage.googleapis.com/zapvine-prod.appspot.com/archetypes/$archetypeFileName';
       print("Downloading $zipUrl");
       final http.Response response = await client.get(Uri.parse(zipUrl));
       List<int> bytes = response.bodyBytes;

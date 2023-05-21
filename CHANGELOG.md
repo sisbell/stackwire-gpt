@@ -1,3 +1,6 @@
+## 0.12.0
+- Upgrade to Dart 3 [#70](https://github.com/sisbell/stackwire-gpt/issues/70)
+- Catalog Plugin Archetype [#71](https://github.com/sisbell/stackwire-gpt/issues/71)
 ## 0.11.0
 - Allow Plugin Servers to Inherit Properties [#66](https://github.com/sisbell/stackwire-gpt/issues/66)
 - Plugin Server Variant Support [#67](https://github.com/sisbell/stackwire-gpt/issues/67)

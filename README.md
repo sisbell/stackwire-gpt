@@ -36,6 +36,7 @@ The following are the use cases supported
 * [Generate Prompt Project](#generate-prompt-project)
 * [Generate Chain Project](#generate-chain-project)
 * [Add Report Plugin](#add-report-plugin)
+* [ZapVine Plugin Catalog](https://github.com/sisbell/stackwire-gpt/wiki/ZapVine-Plugin-Catalog)
 
 ## Creating Projects
 Run the generate project command

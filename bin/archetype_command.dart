@@ -22,27 +22,33 @@ class ArchetypeCommand extends Command {
     final builder = ArchetypeBuilder(localFileSystem);
     final archetypeDirectory = await builder.downloadArchetypeArchive();
     final archetypeDirectories = {
+      "ChatGPT Plugin": "plugins-quickstart",
+      "ZapVine Plugin Catalog": "plugin-catalog",
       "Chain": "chain",
       "Prompt": "prompt",
       "Batch": "batch",
-      "Image": "image",
-      "ChatGPT Plugin": "plugins-quickstart"
+      "Image": "image"
     };
     final projectTypes = [
+      'ChatGPT Plugin',
+      'ZapVine Plugin Catalog',
       'Prompt',
       'Chain',
       'Batch',
-      'Image',
-      'ChatGPT Plugin'
+      'Image'
     ];
     final selectedProjectIndex = Select(
       prompt: 'Project Archetype',
       options: projectTypes,
       initialIndex: 0,
     ).interact();
-    final projectName = Input(prompt: 'Project Name: ').interact();
-    final projectVersion =
-        Input(prompt: 'Project Version: ', defaultValue: "1.0").interact();
+
+    final projectName = (selectedProjectIndex == 1)
+        ? "PluginCatalog"
+        : Input(prompt: 'Project Name: ', defaultValue: "MyProject").interact();
+    final projectVersion = (selectedProjectIndex == 1)
+        ? "1.0"
+        : Input(prompt: 'Project Version: ', defaultValue: "1.0").interact();
     final projectSelection = projectTypes[selectedProjectIndex];
     final archetypeName = archetypeDirectories[projectSelection];
     final projectDir = localFileSystem.directory(projectName);
@@ -53,24 +59,27 @@ class ArchetypeCommand extends Command {
       "projectName": projectName,
       "projectVersion": projectVersion
     };
-
     if (selectedProjectIndex == 0) {
+      //plugins
+    } else if (selectedProjectIndex == 1) {
+      //catalog
+    } else if (selectedProjectIndex == 2) {
       //prompt
       askImportKey(templateProperties, projectName);
       askBlockRuns(templateProperties);
       askResponseFormat(templateProperties);
-    } else if (selectedProjectIndex == 1) {
+    } else if (selectedProjectIndex == 3) {
       //chain
       askImportKey(templateProperties, projectName);
       askBlockRuns(templateProperties);
       askFixJson(templateProperties);
       templateProperties.addAll({"responseFormat": "json"});
       askChainRuns(templateProperties);
-    } else if (selectedProjectIndex == 2) {
+    } else if (selectedProjectIndex == 4) {
       //batch
       askImportKey(templateProperties, projectName);
       askBlockRuns(templateProperties);
-    } else if (selectedProjectIndex == 3) {
+    } else if (selectedProjectIndex == 5) {
       //image
       askImportKey(templateProperties, projectName);
       askImageDescription(templateProperties);

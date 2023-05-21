@@ -1,0 +1,18 @@
+---
+projectName: plugin-catalog
+projectVersion: '1.0'
+projectType: plugin
+defaultConfig:
+  properties:
+    port: 5003
+    nameForHuman: ZapVine Plugin Catalog
+    nameForModel: zapvine
+    descriptionForHuman: Discover ChatGPT Plugins through a ChatGPT Plugin
+
+pluginServers:
+  - serverId: catalog
+    mockedRequests:
+      - path: /catalog
+        method: get
+        mockedResponse: catalog.json
+
