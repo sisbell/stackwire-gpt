@@ -3,6 +3,7 @@ import 'dart:mirrors';
 import 'package:args/command_runner.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
+import 'package:gpt/src/chatgpt/catalog_parser.dart';
 import 'package:gpt/src/chatgpt/plugin_server.dart';
 import 'package:gpt/src/gpt_plugin.dart';
 import 'package:gpt/src/io_helper.dart';
@@ -17,6 +18,7 @@ void main(List<String> arguments) async {
   CommandRunner("air", "A command line tool for running GPT commands")
     ..addCommand(ApiCountCommand())
     ..addCommand(ArchetypeCommand())
+    ..addCommand(CatalogCommand())
     ..addCommand(CleanCommand())
     ..addCommand(PluginServerCommand())
     ..addCommand(RunCommand())
@@ -66,6 +68,21 @@ class ApiCountCommand extends ProjectInitializeCommand {
       }
     }
     return null;
+  }
+}
+
+class CatalogCommand extends Command {
+  @override
+  String get description => "Creates a Plugin Catalog File";
+
+  @override
+  String get name => "catalog";
+
+  @override
+  Future<void> run() async {
+    final inputFile = localFileSystem.file("manifests.json");
+    final outputFile = localFileSystem.file("catalog.json");
+    await parseCatalog(inputFile, outputFile);
   }
 }
 

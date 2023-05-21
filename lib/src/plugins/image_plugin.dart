@@ -106,5 +106,4 @@ class ImageGptPlugin extends GptPlugin {
         requestBody, "v1/images/generations", toDirectory,
         dryRun: dryRun);
   }
-
 }

@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "${nameForHuman}",
+  "name_for_model": "${nameForModel}",
+  "description_for_human": "${descriptionForHuman}",
+  "description_for_model": "${manifestPrompt}",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "http://localhost:${port}/openapi.yaml",
+    "is_user_authenticated": false
+  },
+  "logo_url": "http://localhost:${port}/logo.webp",
+  "contact_email": "legal@example.com",
+  "legal_info_url": "http://example.com/legal"
+}

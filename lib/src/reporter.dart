@@ -33,8 +33,7 @@ class ConcreteReporter extends Reporter {
     final outputResponseFile =
         "$toDirectory/$timestamp-$responseId-response.json";
     await ioHelper.writeString(requestBody, outputRequestFile);
-    await ioHelper.writeString(
-        jsonEncode(responseBody), outputResponseFile);
+    await ioHelper.writeString(jsonEncode(responseBody), outputResponseFile);
   }
 
   @override
