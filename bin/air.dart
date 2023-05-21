@@ -3,12 +3,12 @@ import 'dart:mirrors';
 import 'package:args/command_runner.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
-import 'package:gpt/src/chatgpt/catalog_parser.dart';
 import 'package:gpt/src/chatgpt/plugin_server.dart';
 import 'package:gpt/src/gpt_plugin.dart';
 import 'package:gpt/src/io_helper.dart';
 
 import 'archetype_command.dart';
+import 'catalog_command.dart';
 
 final localFileSystem = LocalFileSystem();
 
@@ -68,21 +68,6 @@ class ApiCountCommand extends ProjectInitializeCommand {
       }
     }
     return null;
-  }
-}
-
-class CatalogCommand extends Command {
-  @override
-  String get description => "Creates a Plugin Catalog File";
-
-  @override
-  String get name => "catalog";
-
-  @override
-  Future<void> run() async {
-    final inputFile = localFileSystem.file("manifests.json");
-    final outputFile = localFileSystem.file("catalog.json");
-    await parseCatalog(inputFile, outputFile);
   }
 }
 

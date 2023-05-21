@@ -1,6 +1,6 @@
 name: gpt
 description: A command line tool for running GPT commands. This tool supports GPT Plugins, prompt-batching and prompt-chaining.
-version: 0.12.0
+version: 0.13.0
 repository: https://github.com/sisbell/stackwire-gpt
 issue_tracker: https://github.com/sisbell/stackwire-gpt/issues
 executables:
