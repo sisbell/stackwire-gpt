@@ -6,6 +6,7 @@ Use this tool to
 * Create **experiments** to see how different config parameters and prompts affect performance and output.
 * Create **images** with DALL-E
 * Do rapid prototyping of **ChatGPT Plugins** through a mock server
+* Discover ChatGPT Plugins with a ChatGPT Plugin
 
 ## Getting Started
 You will need to create an OpenAI API Key. If you have an account, you can create a key here
